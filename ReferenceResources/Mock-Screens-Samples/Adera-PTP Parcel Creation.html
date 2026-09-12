@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+      :root {
+        --primary-color: #38e07b;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#111714]">
+<div class="relative flex size-full min-h-screen flex-col dark justify-between group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+<div class="flex flex-col gap-4 p-4">
+<header class="flex items-center justify-between pb-2">
+<button class="text-white">
+<span class="material-symbols-outlined text-3xl"> arrow_back_ios_new </span>
+</button>
+<h1 class="text-xl font-bold text-white">New Parcel</h1>
+<div class="w-8"></div>
+</header>
+<main class="flex flex-col gap-6">
+<section>
+<h2 class="mb-3 text-lg font-semibold text-white">Sender Details</h2>
+<div class="flex flex-col gap-4">
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Sender Name" value=""/>
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Sender Phone" value=""/>
+</div>
+</section>
+<section>
+<h2 class="mb-3 text-lg font-semibold text-white">Recipient Details</h2>
+<div class="flex flex-col gap-4">
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Recipient Name" value=""/>
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Recipient Phone" value=""/>
+</div>
+</section>
+<section>
+<h2 class="mb-3 text-lg font-semibold text-white">Parcel Details</h2>
+<div class="grid grid-cols-2 gap-4">
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Width (cm)" value=""/>
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Height (cm)" value=""/>
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Length (cm)" value=""/>
+<input class="w-full rounded-xl border-none bg-[#29382f] p-4 text-white placeholder:text-[#9eb7a8] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Weight (kg)" value=""/>
+</div>
+</section>
+<section>
+<h2 class="mb-3 text-lg font-semibold text-white">Delivery Options</h2>
+<div class="flex flex-col gap-4">
+<select class="w-full appearance-none rounded-xl border-none bg-[#29382f] p-4 text-white focus:ring-2 focus:ring-[var(--primary-color)]">
+<option disabled="" selected="" value="">Preferred Delivery Window</option>
+<option value="morning">Morning (9 AM - 12 PM)</option>
+<option value="afternoon">Afternoon (1 PM - 5 PM)</option>
+<option value="evening">Evening (6 PM - 9 PM)</option>
+</select>
+<div class="flex rounded-full bg-[#29382f] p-1">
+<label class="flex-1 cursor-pointer rounded-full py-2 text-center text-sm font-medium has-[:checked]:bg-[#111714] has-[:checked]:text-white text-[#9eb7a8]">
+<input checked="" class="sr-only" name="service_level" type="radio" value="Standard"/>
+                  Standard
+                </label>
+<label class="flex-1 cursor-pointer rounded-full py-2 text-center text-sm font-medium has-[:checked]:bg-[#111714] has-[:checked]:text-white text-[#9eb7a8]">
+<input class="sr-only" name="service_level" type="radio" value="Express"/>
+                  Express
+                </label>
+</div>
+</div>
+</section>
+<div class="mt-4 flex items-center justify-between rounded-xl bg-[#29382f] p-4">
+<p class="font-medium text-white">Estimated Price:</p>
+<p class="text-2xl font-bold text-[var(--primary-color)]">150 ETB</p>
+</div>
+<button class="w-full rounded-full bg-[var(--primary-color)] py-4 text-base font-bold text-[#111714]">Create Parcel</button>
+</main>
+</div>
+<footer class="sticky bottom-0">
+<div class="flex gap-2 border-t border-[#29382f] bg-[#1c2620] px-4 pb-3 pt-2">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[var(--primary-color)]" href="#">
+<span class="material-symbols-outlined"> home </span>
+<p class="text-xs font-medium tracking-[0.015em]">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#9eb7a8]" href="#">
+<span class="material-symbols-outlined"> local_shipping </span>
+<p class="text-xs font-medium tracking-[0.015em]">Orders</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-[#9eb7a8]" href="#">
+<span class="material-symbols-outlined"> person </span>
+<p class="text-xs font-medium tracking-[0.015em]">Account</p>
+</a>
+</div>
+<div class="h-5 bg-[#1c2620]"></div>
+</footer>
+</div>
+
+</body></html>

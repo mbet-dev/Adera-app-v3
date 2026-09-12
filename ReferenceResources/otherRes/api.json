@@ -1,0 +1,864 @@
+{
+	"info": {
+		"_postman_id": "d7ee9a68-55fc-4339-b8e7-764960dc68d7",
+		"name": "Arifpay",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18959476"
+	},
+	"item": [
+		{
+			"name": "C2B",
+			"item": [
+				{
+					"name": "Direct Payment",
+					"item": [
+						{
+							"name": "Awash",
+							"item": [
+								{
+									"name": "Create Check out session id",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "mx9dn1iRbrV9NrlbTb8WIzVbrLfpKtY6",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251941070163\",\r\n    \"email\":\"natnael@arifpay.net\",\r\n    \"nonce\": \"as02501230829b330e126e7c64a1e8a32ec222bdd57ff\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://664db983ede9a2b5565497ee.mockapi.io/user\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"AWASH_BIRR\"\r\n    ],\r\n    \"expireDate\": \"2025-06-01T03:45:27\",\r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 5,\r\n            \"price\": 2,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        },\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 5,\r\n            \"price\": 2,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 20.0\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.org/api/checkout/session",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"org"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"session"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Awash direct",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"Sessionid\": \"3754BA41DBBE\" ,\r\n        \"Phonenumber\": \"251932155086\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/awash/direct/transfer",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"awash",
+												"direct",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Awash OTP Verify",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"SessionId\": \"3754BA41DBBE\" ,\r\n        \"otp\": \"OTP\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/awash/direct/verifyOTP",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"awash",
+												"direct",
+												"verifyOTP"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Amole",
+							"item": [
+								{
+									"name": "Create Check out session id Copy",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251944294981\",\r\n    \"email\":\"natnael@arifpay.net\",\r\n    \"nonce\": \"6a3a71hoi-9\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://gateway.arifpay.net/test/callback\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"AMOLE\"\r\n    ],\r\n    \"expireDate\": \"2025-02-01T03:45:27\",\r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 5,\r\n            \"price\": 2,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        },\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 5,\r\n            \"price\": 2,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 20.0\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/session",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"session"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Amole direct",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"sessionId\": \"3754BA41DBBE\" ,\r\n        \"phoneNumber\": \"251932155086\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/amole/direct/transfer",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"amole",
+												"direct",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Amole OTP Verify",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"SessionId\": \"3754BA41DBBE\" ,\r\n        \"otp\": \"OTP\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/amole/direct/verifyOTP",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"amole",
+												"direct",
+												"verifyOTP"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "HelloCash",
+							"item": [
+								{
+									"name": "HelloCash",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"sessionId\": \"3754BA41DBBE\" ,\r\n        \"phoneNumber\": \"251932155086\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/hellocash/direct/transfer",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"hellocash",
+												"direct",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "HelloCash OTP Verify",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "your API key",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"sessionId\": \"3754BA41DBBE\" ,\r\n        \"otp\": \"OTP\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/hellocash/direct/verify",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"hellocash",
+												"direct",
+												"verify"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Check out session id Copy 3",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "axLLSf9PtcCUeAPmDAHJuq0vWL4W7Rez",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"cancelUrl\": \"https://cancel.com\",\r\n  \"lang\" : \"EN\",\r\n  \"phone\": \"251954926213\",\r\n  \"email\": \"Bulk@gmail.com\",\r\n  \"nonce\": \"Bulk_BaULKTEST2\",\r\n  \"errorUrl\": \"http://error.com\",\r\n  \"notifyUrl\": \"http://success.com\",\r\n  \"successUrl\": \"http://success.com\",\r\n  \"paymentMethods\": [\r\n    \"CBE\"\r\n  ],\r\n  \"expireDate\": \"2025-01-14T23:18:11.755Z\",\r\n  \"items\": [\r\n    {\r\n      \"name\": \"bulk\",\r\n      \"quantity\": 1,\r\n      \"price\": 1,\r\n      \"description\": \"bulk\",\r\n      \"image\": \"https://img.jpg\"\r\n    }\r\n  ],\r\n  \"beneficiaries\": [\r\n    {\r\n      \"accountNumber\": \"01320811436100\",\r\n      \"bank\": \"AWINETAA\",\r\n      \"amount\": 1,\r\n    //   \"lang\": \"EN\"\r\n    }\r\n  ]\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/session",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"session"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Telebirr",
+							"item": [
+								{
+									"name": "Telebirr Direct Payment",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "mx9dn1iRbrV9NrlbTb8WIzVbrLfpKtY6",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251922655097\",\r\n    \"email\":\"example@gmail.com\",\r\n    \"nonce\":  \"mmasassdsasadas3AFFD1sB4DasdD2C1D\", \r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://664db983ede9a2b5565497ee.mockapi.io/user\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"TELEBIRR_USSD\"// Don't change this \r\n    ],\r\n    \"expireDate\": \"2025-06-01T03:45:27\",// look out for the format of the expire date \r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 1,\r\n            \"price\": 1,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",// dont change \r\n            \"bank\": \"AWINETAA\",//dont change \r\n            \"amount\": 1.0\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/telebirr-ussd/transfer/direct",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"telebirr-ussd",
+												"transfer",
+												"direct"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "UpdateTransactionToSuccess",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "dY6zC8R4K6MyYOt7ljYkvnHmn4j3Vz11",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n     // \"paymentType\": \"CBE\", TELEBIRR_USSD\n   \"paymentType\": \"TELEBIRR_USSD\", \n   \"transactionId\": \"\",    \n    \"status\": \"FAILED\",\n    \"userName\": \"Ezra\",\n    \"password\": \"Pa$$w0rd\"\n\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/verify/transaction/update/315549AEDD268D",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"verify",
+												"transaction",
+												"update",
+												"315549AEDD268D"
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "UpdateTransactionToSuccess",
+											"originalRequest": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "x-arifpay-key",
+														"value": "dY6zC8R4K6MyYOt7ljYkvnHmn4j3Vz11",
+														"type": "text",
+														"disabled": true
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n    \"status\":\"SUCCESS\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "http://localhost:2000/api/verify/transaction/update/5CD578F2DC2C",
+													"protocol": "http",
+													"host": [
+														"localhost"
+													],
+													"port": "2000",
+													"path": [
+														"api",
+														"verify",
+														"transaction",
+														"update",
+														"5CD578F2DC2C"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Vary",
+													"value": "Origin"
+												},
+												{
+													"key": "Vary",
+													"value": "Access-Control-Request-Method"
+												},
+												{
+													"key": "Vary",
+													"value": "Access-Control-Request-Headers"
+												},
+												{
+													"key": "X-Content-Type-Options",
+													"value": "nosniff"
+												},
+												{
+													"key": "X-XSS-Protection",
+													"value": "1; mode=block"
+												},
+												{
+													"key": "Cache-Control",
+													"value": "no-cache, no-store, max-age=0, must-revalidate"
+												},
+												{
+													"key": "Pragma",
+													"value": "no-cache"
+												},
+												{
+													"key": "Expires",
+													"value": "0"
+												},
+												{
+													"key": "X-Frame-Options",
+													"value": "DENY"
+												},
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												},
+												{
+													"key": "Content-Length",
+													"value": "270"
+												},
+												{
+													"key": "Date",
+													"value": "Tue, 23 Apr 2024 16:57:01 GMT"
+												},
+												{
+													"key": "Keep-Alive",
+													"value": "timeout=60"
+												},
+												{
+													"key": "Connection",
+													"value": "keep-alive"
+												}
+											],
+											"cookie": [],
+											"body": "[\n    {\n        \"id\": null,\n        \"checkoutSessionId\": null,\n        \"checkoutSession\": null,\n        \"transactionId\": \"5CD578F2DC2C\",\n        \"transactionStatus\": \"SUCCESS\",\n        \"paymentType\": null,\n        \"virtualAccount\": null,\n        \"virtualCard\": null,\n        \"debitAccount\": null,\n        \"phoneNumber\": null,\n        \"message\": null,\n        \"updatedAt\": null,\n        \"createdAt\": null\n    }\n]"
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "MPESA",
+							"item": [
+								{
+									"name": "MPESA",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "{{Net-Aapi-Key}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n     \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251703160516\", \r\n    \"email\":\"natnael@arifpay.net\",\r\n    \"nonce\": \"asd234bsavklcb\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://google.com\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"MPESSA\"\r\n    ],\r\n    \"expireDate\": \"2025-02-29T23:30:27\",\r\n    \"items\": [\r\n \r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 1,\r\n            \"price\": 0.1,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 0.1\r\n        }\r\n    ],\r\n    \"name\":\"Belay\",\r\n    \"lang\": \"EN\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/mpesa/transfer/direct",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"mpesa",
+												"transfer",
+												"direct"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "CBE",
+							"item": [
+								{
+									"name": "Create Check out session id Copy 2",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "mx9dn1iRbrV9NrlbTb8WIzVbrLfpKtY6",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"cancelUrl\": \"https://example1.com\",\r\n    \"phone\":\"251922655097\",\r\n    \"email\":\"Ex@gmail.net\",\r\n    \"nonce\": \"251asdsaddsasad93554asdasd8208sadas\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://664db983ede9a2b5565497ee.mockapi.io/user\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"TELEBIRR_USSD\"\r\n    ],\r\n    \"expireDate\": \"2026-02-10T15:54:55\",\r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 1,\r\n            \"price\": 3,\r\n            \"description\": \"test\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 3\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/session",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"session"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "CBE",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-arifpay-key",
+												"value": "mx9dn1iRbrV9NrlbTb8WIzVbrLfpKtY6",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{ \r\n       \"sessionId\": \"C367E444DFD44D\" ,\r\n        \"phoneNumber\": \"251954926213\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://gateway.arifpay.net/api/checkout/cbe/direct/transfer",
+											"protocol": "https",
+											"host": [
+												"gateway",
+												"arifpay",
+												"net"
+											],
+											"path": [
+												"api",
+												"checkout",
+												"cbe",
+												"direct",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "New Request",
+									"request": {
+										"method": "GET",
+										"header": []
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "B2C",
+			"item": [
+				{
+					"name": "Telebirr",
+					"item": [
+						{
+							"name": "Create Check out session id",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-arifpay-key",
+										"value": "{{Net-Aapi-Key}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251952926213\",\r\n    \"email\":\"natnael@arifpay.net\",\r\n    \"nonce\": \"6a3as7hdo-assa9\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://gateway.arifpay.net/test/callback\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"TELEBIRR_USSD\"\r\n    ],\r\n    \"expireDate\": \"2025-02-12T03:45:27\",\r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 1,\r\n            \"price\": 0.01,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 0.01\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://gateway.arifpay.net/api/checkout/session",
+									"protocol": "https",
+									"host": [
+										"gateway",
+										"arifpay",
+										"net"
+									],
+									"path": [
+										"api",
+										"checkout",
+										"session"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Telebirr",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-arifpay-key",
+										"value": "your API key",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \t\"sessionId\": \"5D7FD029D8C2\",\r\n    \t\"phoneNumber\":\"251911476224\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://telebirr-b2c.arifpay.net/api/Telebirr/b2c/transfer",
+									"protocol": "https",
+									"host": [
+										"telebirr-b2c",
+										"arifpay",
+										"net"
+									],
+									"path": [
+										"api",
+										"Telebirr",
+										"b2c",
+										"transfer"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "CBE",
+					"item": [
+						{
+							"name": "Create Check out session id",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-arifpay-key",
+										"value": "your api key here",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"cancelUrl\": \"https://example.com\",\r\n    \"phone\":\"251952926213\",\r\n    \"email\":\"natnael@arifpay.net\",\r\n    \"nonce\": \"6a3a7ho-assa9\",\r\n    \"errorUrl\": \"http://error.com\",\r\n    \"notifyUrl\": \"https://gateway.arifpay.net/test/callback\",\r\n    \"successUrl\": \"http://example.com\",\r\n    \"paymentMethods\": [\r\n        \"TELEBIRR_USSD\"\r\n    ],\r\n    \"expireDate\": \"2025-02-01T03:45:27\",\r\n    \"items\": [\r\n        {\r\n            \"name\": \"ሙዝ\",\r\n            \"quantity\": 1,\r\n            \"price\": 0.01,\r\n            \"description\": \"Fresh Corner preimuim Banana.\",\r\n            \"image\": \"https://4.imimg.com/data4/KK/KK/GLADMIN-/product-8789_bananas_golden-500x500.jpg\"\r\n        }\r\n    ],\r\n    \"beneficiaries\": [\r\n        {\r\n            \"accountNumber\": \"01320811436100\",\r\n            \"bank\": \"AWINETAA\",\r\n            \"amount\": 0.01\r\n        }\r\n    ],\r\n    \"lang\": \"EN\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://gateway.arifpay.net/api/checkout/session",
+									"protocol": "https",
+									"host": [
+										"gateway",
+										"arifpay",
+										"net"
+									],
+									"path": [
+										"api",
+										"checkout",
+										"session"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "CBE",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-arifpay-key",
+										"value": "Your API KEY",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"sessionId\": \"AC2F8BF0D3F7\",\r\n    \"phoneNumber\": \"251954926213\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://cbe-b2c.arifpay.net/api/Cbebirr/b2c/transfer",
+									"protocol": "https",
+									"host": [
+										"cbe-b2c",
+										"arifpay",
+										"net"
+									],
+									"path": [
+										"api",
+										"Cbebirr",
+										"b2c",
+										"transfer"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

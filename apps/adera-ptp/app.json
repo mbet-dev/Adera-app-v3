@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "adera-ptp",
+    "slug": "adera-ptp",
+    "version": "1.0.0",
+    "entryPoint": "index.js",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#2E7D32"
+    },
+    "updates": {
+      "enabled": false,
+      "checkAutomatically": "never",
+      "fallbackToCacheTimeout": 0
+    },
+    "scheme": "adera",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.adera.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Camera access is required to scan parcel QR codes."
+      }
+    },
+    "android": {
+      "backgroundColor": "#2E7D32",
+      "package": "com.adera.app",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "devCommands": {
+      "fromRepoRoot": {
+        "start": "cd apps/adera-ptp && expo start",
+        "android": "cd apps/adera-ptp && expo run:android",
+        "ios": "cd apps/adera-ptp && expo run:ios",
+        "build:android": "cd apps/adera-ptp && eas build --platform android",
+        "build:ios": "cd apps/adera-ptp && eas build --platform ios"
+      },
+      "fromAppDir": {
+        "start": "expo start",
+        "android": "expo run:android",
+        "ios": "expo run:ios",
+        "build:android": "eas build --platform android",
+        "build:ios": "eas build --platform ios"
+      }
+    }
+  }
+}

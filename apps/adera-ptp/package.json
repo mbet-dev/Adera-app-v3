@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json.schemastore.org/package",
+  "name": "adera-ptp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx expo start",
+    "android": "npx expo start --android",
+    "ios": "npx expo start --ios",
+    "web": "npx expo start --web",
+    "dev": "npx expo start",
+    "clear": "npx expo start --clear"
+  },
+  "dependencies": {
+    "@adera/auth": "file:../../packages/auth",
+    "@adera/preferences": "file:../../packages/preferences",
+    "@adera/ui": "file:../../packages/ui",
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "expo": "~54.0.25",
+    "expo-barcode-scanner": "~14.0.1",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-local-authentication": "~17.0.7",
+    "expo-secure-store": "~15.0.7",
+    "expo-status-bar": "~3.0.8",
+    "formik": "^2.4.5",
+    "leaflet": "^1.9.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-leaflet": "^4.2.1",
+    "react-native": "0.81.5",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-maps": "^1.20.1",
+    "react-native-web-maps": "^0.3.0",
+    "react-native-pager-view": "6.9.1",
+    "react-native-paper": "^5.14.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.1",
+    "yup": "^1.3.2"
+  },
+  "private": true,
+  "react-native-web": {
+    "module": {
+      "react-native-maps": "react-native-web-maps"
+    }
+  }
+}

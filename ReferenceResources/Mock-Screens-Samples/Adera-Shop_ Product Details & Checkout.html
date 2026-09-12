@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Adera-Shop - Product Details</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+    :root {
+      --primary-color: #38e07b;
+      --background-color: #111714;
+      --card-background-color: #1C2620;
+      --text-color: #FFFFFF;
+      --muted-text-color: #9eb7a8;
+      --border-color: #29382f;
+    }
+    body {
+      font-family: 'Spline Sans', sans-serif;
+    }
+    .snap-x-mandatory {
+        scroll-snap-type: x mandatory;
+    }
+    .snap-center {
+        scroll-snap-align: center;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[var(--background-color)] text-[var(--text-color)]">
+<div class="flex flex-col min-h-screen justify-between">
+<main class="flex-grow">
+<header class="sticky top-0 z-10 flex items-center justify-between bg-[var(--background-color)] bg-opacity-80 backdrop-blur-sm p-4">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<h1 class="text-xl font-bold">Product Details</h1>
+<div class="size-10"></div>
+</header>
+<div class="relative">
+<div class="flex overflow-x-auto snap-x-mandatory no-scrollbar">
+<div class="flex-shrink-0 w-full snap-center">
+<img alt="A bag of premium Ethiopian coffee beans" class="w-full h-auto aspect-square object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcUI_2b-aynbgEspFPUrL3LA42UK66TIlwzG8ODiEmkqUAjWwc2uNi4NZKtz8kMlEDBv7auM0UDlNEO7_t-m1U6oqbdW1hYPJx8KrWNZ3bXuJWiFGY9As9STdsZcLTnDSe4B521LeibTLxRgsjyoVXwMGBJduXErTKllic1wCIuHr1k-5Hsv-TFINtCv7uUCWUTvvJe3DRQmirW43QtsjtQdBhoRk4Dib885U6tZULoIIf2bsuXzUcVg6VKY3qrUKIDSvcFowvlmsm"/>
+</div>
+<div class="flex-shrink-0 w-full snap-center">
+<img alt="Coffee beans close up" class="w-full h-auto aspect-square object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoeTd24tMaDpmBFaR92rvnSFIakJVoVBJ2e56Mi1FLnJdLdQTIyI1pykDDf_xJc4-CtzBHmdIv3hgNwVuto4hSF0SIogmx3r7_XUDvENCAo4XzW4_OsTibt8o0W8WZYRJGHphJ9l-yOdybyq3SAPt1lO1YwN_jj7h9LrSSjN8WyC2R8ecoOG_URKohlk7KccrT3xZbuS6wSsZ92ah0qOwIaMYCyhqHt0BUhr_PXgpdwU9jHy5dSGtngo8PXny2Wvz-f5lNjhIsHnA3"/>
+</div>
+<div class="flex-shrink-0 w-full snap-center">
+<img alt="Coffee beans in a sack" class="w-full h-auto aspect-square object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBc-m9WofqyNz3q_yCUuVJ8q5PIDCP6sKMnI4GbWy70K7DK1YSLAvZkIwEdLxJegkJ773v1_uGWGdJWb4wIG1DGFkRhqi_xlbLQkPOICVjnnMucmgCepBhUTukKth_Cj_PMbs1celXi0qKXNbTrvWXQ3I6yL-e0CnQFpyd6n8K8WJU-rvgrjsaZbzqVRdoz3Im3RJ15tRZlduTMF5xmmKRXso5XPHVCYYcW9s-62Chckylq6u0BvOayi_UhZqQ7Q4r6yEWCBIf9DsMX"/>
+</div>
+</div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<div>
+<h2 class="text-2xl font-bold leading-tight">Premium Ethiopian Coffee Beans</h2>
+<p class="text-[var(--muted-text-color)] mt-2">Sourced from the Yirgacheffe region, these beans offer a rich, aromatic experience with notes of citrus and chocolate.</p>
+</div>
+<div>
+<h3 class="text-lg font-bold">Variants</h3>
+<div class="flex flex-wrap gap-3 mt-3">
+<label class="flex items-center justify-center px-5 h-12 rounded-full border-2 border-[var(--border-color)] cursor-pointer has-[:checked]:border-[var(--primary-color)] has-[:checked]:bg-[var(--primary-color)] has-[:checked]:text-[var(--background-color)] transition-all">
+<input checked="" class="sr-only" name="variant" type="radio" value="250g"/>
+<span class="text-sm font-medium">250g</span>
+</label>
+<label class="flex items-center justify-center px-5 h-12 rounded-full border-2 border-[var(--border-color)] cursor-pointer has-[:checked]:border-[var(--primary-color)] has-[:checked]:bg-[var(--primary-color)] has-[:checked]:text-[var(--background-color)] transition-all">
+<input class="sr-only" name="variant" type="radio" value="500g"/>
+<span class="text-sm font-medium">500g</span>
+</label>
+<label class="flex items-center justify-center px-5 h-12 rounded-full border-2 border-[var(--border-color)] cursor-pointer has-[:checked]:border-[var(--primary-color)] has-[:checked]:bg-[var(--primary-color)] has-[:checked]:text-[var(--background-color)] transition-all">
+<input class="sr-only" name="variant" type="radio" value="1kg"/>
+<span class="text-sm font-medium">1kg</span>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold">Price</h3>
+<p class="text-2xl font-bold text-[var(--primary-color)]">ETB 350</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 rounded-full bg-[var(--card-background-color)] p-2">
+<button class="flex items-center justify-center size-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-xl">remove</span>
+</button>
+<span class="text-lg font-bold w-8 text-center">1</span>
+<button class="flex items-center justify-center size-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<button class="flex-1 flex items-center justify-center rounded-full h-14 px-6 bg-[var(--primary-color)] text-[var(--background-color)] text-base font-bold transition-transform active:scale-95">
+<span>Add to Cart</span>
+</button>
+</div>
+</div>
+</main>
+<footer class="sticky bottom-0 bg-[var(--card-background-color)] border-t border-[var(--border-color)]">
+<nav class="flex justify-around items-center px-4 pt-2 pb-5">
+<a class="flex flex-col items-center gap-1 text-[var(--muted-text-color)]" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[var(--primary-color)]" href="#">
+<div class="relative">
+<span class="material-symbols-outlined">shopping_bag</span>
+<div class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[var(--primary-color)]"></div>
+</div>
+<span class="text-xs font-bold">Shop</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[var(--muted-text-color)]" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-xs font-medium">Cart</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[var(--muted-text-color)]" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs font-medium">Account</span>
+</a>
+</nav>
+</footer>
+</div>
+</body></html>

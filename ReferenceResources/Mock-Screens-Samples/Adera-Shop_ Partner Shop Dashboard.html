@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Manrope%3Awght%40400%3B500%3B700%3B800&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>Adera Shop Dashboard</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+    :root {
+      --primary-color: #38e07b;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-gray-900">
+<div class="relative flex size-full min-h-screen flex-col bg-[#111714] text-white" style='font-family: Manrope, "Noto Sans", sans-serif;'>
+<header class="sticky top-0 z-10 bg-[#111714]/80 backdrop-blur-sm">
+<div class="flex items-center p-4">
+<button class="rounded-full p-2">
+<span class="material-symbols-outlined text-white"> menu </span>
+</button>
+<h1 class="flex-1 text-center text-xl font-bold">Dashboard</h1>
+<div class="w-10"></div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto px-4 pb-24">
+<section class="py-6">
+<h2 class="text-2xl font-bold tracking-tight">Store Overview</h2>
+<div class="mt-4 grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-2 rounded-lg bg-[#29382f] p-4">
+<p class="text-sm font-medium text-gray-300">Total Sales</p>
+<p class="text-2xl font-bold">ETB 12,500</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base text-[var(--primary-color)]"> trending_up </span>
+<p class="text-sm font-medium text-[var(--primary-color)]">+10%</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 rounded-lg bg-[#29382f] p-4">
+<p class="text-sm font-medium text-gray-300">Orders Received</p>
+<p class="text-2xl font-bold">350</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base text-[var(--primary-color)]"> trending_up </span>
+<p class="text-sm font-medium text-[var(--primary-color)]">+5%</p>
+</div>
+</div>
+<div class="col-span-2 flex flex-col gap-2 rounded-lg bg-[#29382f] p-4">
+<p class="text-sm font-medium text-gray-300">Items Sold</p>
+<p class="text-2xl font-bold">500</p>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base text-[var(--primary-color)]"> trending_up </span>
+<p class="text-sm font-medium text-[var(--primary-color)]">+8%</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-6">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold tracking-tight">Recent Orders</h2>
+<a class="text-sm font-medium text-[var(--primary-color)]" href="#">View All</a>
+</div>
+<div class="mt-4 space-y-3">
+<div class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#29382f]">
+<span class="material-symbols-outlined"> shopping_bag </span>
+</div>
+<div class="flex-1">
+<p class="font-medium">Abebe Kebede</p>
+<p class="text-sm text-gray-400">Order #12345</p>
+</div>
+<p class="font-semibold">ETB 50</p>
+</div>
+<div class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#29382f]">
+<span class="material-symbols-outlined"> shopping_bag </span>
+</div>
+<div class="flex-1">
+<p class="font-medium">Selamawit Tesfaye</p>
+<p class="text-sm text-gray-400">Order #12346</p>
+</div>
+<p class="font-semibold">ETB 75</p>
+</div>
+<div class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#29382f]">
+<span class="material-symbols-outlined"> shopping_bag </span>
+</div>
+<div class="flex-1">
+<p class="font-medium">Dawit Mekonnen</p>
+<p class="text-sm text-gray-400">Order #12347</p>
+</div>
+<p class="font-semibold">ETB 100</p>
+</div>
+</div>
+</section>
+<section class="py-6">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-bold tracking-tight">Inventory</h2>
+<a class="text-sm font-medium text-[var(--primary-color)]" href="#">Manage</a>
+</div>
+<div class="mt-4 space-y-3">
+<a class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4 transition-colors hover:bg-[#29382f]" href="#">
+<div class="flex-1">
+<p class="font-medium">Injera</p>
+<p class="text-sm text-gray-400">100 units in stock</p>
+</div>
+<span class="material-symbols-outlined text-gray-400"> chevron_right </span>
+</a>
+<a class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4 transition-colors hover:bg-[#29382f]" href="#">
+<div class="flex-1">
+<p class="font-medium">Berbere</p>
+<p class="text-sm text-gray-400">50 units in stock</p>
+</div>
+<span class="material-symbols-outlined text-gray-400"> chevron_right </span>
+</a>
+<a class="flex items-center gap-4 rounded-lg bg-[#1c2620] p-4 transition-colors hover:bg-[#29382f]" href="#">
+<div class="flex-1">
+<p class="font-medium">Coffee Beans</p>
+<p class="text-sm text-gray-400">200 units in stock</p>
+</div>
+<span class="material-symbols-outlined text-gray-400"> chevron_right </span>
+</a>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 border-t border-[#29382f] bg-[#1c2620] px-4 pb-3 pt-2">
+<div class="flex justify-around">
+<a class="flex flex-1 flex-col items-center gap-1 text-[var(--primary-color)]" href="#">
+<span class="material-symbols-outlined"> home </span>
+<p class="text-xs font-medium">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined"> storefront </span>
+<p class="text-xs font-medium">Orders</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined"> inventory_2 </span>
+<p class="text-xs font-medium">Products</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-gray-400" href="#">
+<span class="material-symbols-outlined"> account_circle </span>
+<p class="text-xs font-medium">Account</p>
+</a>
+</div>
+</nav>
+</div>
+
+</body></html>

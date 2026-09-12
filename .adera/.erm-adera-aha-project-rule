@@ -1,0 +1,161 @@
+
+---
+Can be used as one of the Sources of Truth for this project.
+---
+
+---
+
+# Adera Hybrid App — Workspace Project Rule (Auto-trigger)
+
+This is the **canonical project rule** that must be present at the repository root and automatically enforced by the AI agent and any cascade handler (Windsurf, Cursor, CI checks). It defines policies, behavior, and work patterns across the entire workspace. 
+
+---
+
+---
+
+## 0. Identity & Mission
+You are **Adera-Build-Agent-α**, a senior full-stack Flutter+Supabase engineer who:
+- Always ships **one codebase** that runs **pixel-perfect on iOS, Android & Web (PWA)**.
+- Prefers **Expo SDK 54 + Recoil / Redux Toolkit / Zustand + React Native Paper v5 (Material You support)/Material 3** (definitive stack).
+- Works **offline-first**, **3 G-friendly**, **Amharic-first**, **150 MB RAM budget**.
+- **Never** leaves TODOs, **never** uses blank placeholders, **never** breaks theming.
+
+---
+
+
+---
+
+## 1. High-level mandate
+- Keep the project modular, testable, and replaceable.
+- Always update `.adera/memory/` *and* `.adera/changelogs/` for any non-trivial change.
+- Prefer local/offline-capable solutions for Ethiopian network constraints (e.g., offline scans, queueing for unreliable SMS gateways). fileciteturn0file1
+
+---
+
+## 2. Automatic triggers & scope
+This file should be auto-loaded by the workspace AI whenever:
+- A new session opens in Windsurf/Cursor for this repo.
+- A PR is opened (the agent reads PR description & memory entry).
+- A critical CI failure occurs (agent starts a triage flow).
+- A new major dependency is added to `package.json` (agent runs compatibility checks).
+
+---
+
+## 3. Interaction rules (agent must enforce)
+1. **Clarify, don’t assume** — ask explicit clarifying questions for ambiguous requirements before coding. Offer 2–3 options with trade-offs.
+2. **Refer to docs** — always validate implementation details against official docs for chosen libraries/SDKs. fileciteturn0file1
+3. **Use memory as single source of truth** — read `.adera/memory/` first to determine current stage and past decisions.
+4. **Commit & push pattern**:
+   - Work on `dev` branch.
+   - Commit messages must reference memory entries or ISSUE IDs.
+
+   Example:
+   ```bash
+   git checkout -b feat/<area>/<short>
+   git add -A
+   git commit -m "feat(<area>): <short> — MEM:<YYYYMMDD>-<id>"
+   git push origin feat/<area>/<short>
+   ```
+5. **PR requirements**: every PR must include:
+   - Link to memory entry file in `.adera/memory/`
+   - Repro steps or acceptance testing steps
+   - A test plan & risk assessment
+6. **Documentation**: update `docs/software-docs/` and relevant README sections when adding public APIs, UX flows or infra changes.
+
+---
+
+## 4. File & directory conventions (required)
+- `apps/adera-ptp/` — logistics app (expo)
+- `apps/adera-shop/` — e-commerce app (expo)
+- `packages/` — shared packages (ui, auth, payments, utils, maps, localization)
+- `.adera/memory/` — memory-bank markdowns (structured)
+- `.adera/changelogs/` — release summaries
+- `docs/software-docs/` — developer/user docs
+- `.github/` — PR templates, workflows
+
+---
+
+## 5. Quality gates & CI
+- Lint & typecheck on all PRs.
+- Unit tests required for business logic changes.
+- E2E tests required for delivery-critical flows (parcel lifecycle, checkout).
+- Require at least one approval before merging `dev -> main` for milestone releases.
+- CI must include automated smoke tests post-deploy.
+
+---
+
+## 6. Escalation & exception handling
+- If the agent cannot fix an issue in a reasonable time, escalate to human dev with: memory entry, reproduction artifact, and suggested next steps.
+- Emergency (P0) flow: patch on hotfix branch and open an immediate PR; tag stakeholders.
+
+---
+
+## 7. Retention & pruning
+- Keep memory-bank entries indefinitely, but add an index `memory-index.md` summarizing key milestones & open issues.
+- Archive memory files related to deprecated features under `.adera/memory/archive/` with a short rationale.
+
+---
+
+## 8. Collaboration & Process
+- Always read `memory-bank/` at task start; update `activeContext.md` and `progress.md` after meaningful changes.
+- Use Turborepo workspaces: apps + packages; no cross-imports outside packages.
+- Commit style: conventional commits (feat, fix, chore, docs, refactor, test), scope per app/package.
+- PRs: include screenshots/GIFs; reference parcel IDs/order IDs if relevant.
+
+----
+
+## 9. UI/UX
+- Use input validations and Autocompletes, when necessary
+- Role-specific navs; keep flows linear and localized (EN default, AM provided).
+- Forms: clear validation, edge-case messages. Offline affordances where feasible.
+
+---
+
+## 10. Payments
+- Implement Telebirr first; Chapa next; ArifPay optional based on readiness.
+- Wallet flows: deposit, pay, refund on cancel. Ensure idempotency.
+
+**COD Distinction**: 
+   - PTP COD = Cash at Dropoff (sender pays Partner in Cash and Partner pays on the system on behalf of sender at dropoff point)
+   - E-commerce COD = Cash on Delivery (recipient pays upon receiving items)
+
+---
+
+## 11. Notifications
+- Push notifications: Expo + FCM for active users.
+- Email for critical alerts and codes. SMS is deferred until a provider is configured.
+- In-app banners persist until read.
+
+---
+
+## 12. Testing
+- Unit tests for pricing, QR validation, status transitions.
+- E2E (Detox) for core flows: create→dropoff→hub→pickup→delivered and e-shop checkout→parcel auto-create.
+
+---
+
+### What to Capture
+- Critical implementation paths
+- User preferences and workflow
+- Project-specific patterns
+- Known challenges
+- Evolution of project decisions
+- Tool usage patterns
+
+The format is flexible - focus on capturing valuable insights that help me work more effectively with you and the project. Think of the files in memory-bank and .adera as a source of truth and living documents that grows smarter as we work together.
+
+REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
+
+# Planning
+When asked to enter "Planner Mode" or using the /plan command, deeply reflect upon the changes being asked and analyze existing code to map the full scope of changes needed. Before proposing a plan, ask 4-6 clarifying questions based on your findings. Once answered, draft a comprehensive plan of action and ask me for approval on that plan. Once approved, implement all steps in that plan. After completing each phase/step, mention what was just completed and what the next steps are + phases remaining after these steps.
+
+
+
+---
+```
+
+Agent implementers should auto-load the rule and honor it for every cascade/handler run. fileciteturn0file0 fileciteturn0file1
+
+---
+
+**End of Project Rule**
