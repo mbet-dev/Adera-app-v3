@@ -8,6 +8,7 @@ import { ThemeProvider, OnboardingScreen, AppSelectorScreen, LoadingScreen, Mark
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
 import AppNavigator from './src/navigation/AppNavigator';
+import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { AppFlowProvider } from './src/context/AppFlowContext';
 import ThemelessLoadingScreen from './src/ThemelessLoadingScreen';
@@ -56,6 +57,7 @@ function AppContent() {
     setGuestMode(false);
     setShowShopGateway(false);
     setShowAppSelector(false);
+    // Stay on selectedApp='shop' so after auth we route to ShopNavigator
   };
 
   useEffect(() => {
@@ -92,6 +94,14 @@ function AppContent() {
   if (isAuthenticated) {
     if (role === null) {
       return <LoadingScreen message="Loading user profile..." />;
+    }
+    // Route to the appropriate navigator based on which app was selected
+    if (selectedApp === 'shop') {
+      return (
+        <ErrorBoundary fallbackMessage="The Shop encountered an error. Please restart.">
+          <ShopNavigator />
+        </ErrorBoundary>
+      );
     }
     return (
       <ErrorBoundary fallbackMessage="The app encountered an error. Please restart.">
