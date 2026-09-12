@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import { useTheme } from './ThemeProvider';
 
@@ -7,16 +7,16 @@ const LoadingScreen = ({ message = 'Loading...' }) => {
   const theme = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.primary }]}>
-      <View style={styles.content}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.card, { backgroundColor: theme.colors.surfaceContainer, borderRadius: theme.borderRadius.xl }]}>
         <ActivityIndicator
           animating={true}
           size="large"
-          color={theme.colors.onPrimary}
+          color={theme.colors.primary}
         />
         <Text
           variant="bodyLarge"
-          style={[styles.message, { color: theme.colors.onPrimary }]}
+          style={[styles.message, { color: theme.colors.text.secondary }]}
         >
           {message}
         </Text>
@@ -31,17 +31,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: {
+  card: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  indicator: {
-    marginBottom: 16,
+    padding: 40,
   },
   message: {
     textAlign: 'center',
     fontSize: 16,
-    marginTop: 16,
+    marginTop: 20,
   },
 });
 

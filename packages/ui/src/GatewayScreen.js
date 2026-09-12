@@ -4,12 +4,11 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  Image,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Button from './Button';
 import { useTheme } from './ThemeProvider';
 
@@ -25,6 +24,7 @@ const GatewayScreen = ({ onLogin, onGuest, selectedApp = null }) => {
       title: 'Access Logistics Platform',
       subtitle: 'Send parcels, track deliveries, and manage logistics with secure QR codes.',
       color: theme.colors.primary,
+      gradient: theme.gradients.primary,
     },
     shop: {
       name: 'Adera-Shop',
@@ -32,16 +32,16 @@ const GatewayScreen = ({ onLogin, onGuest, selectedApp = null }) => {
       title: 'Enter Marketplace',
       subtitle: 'Discover local products, support Ethiopian businesses, and shop seamlessly.',
       color: theme.colors.secondary,
+      gradient: theme.gradients.secondary,
     },
   };
 
   const currentApp = selectedApp ? appConfig[selectedApp] : null;
+  const bgColor = currentApp ? currentApp.color : theme.colors.primary;
   
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <View 
-        style={[styles.gradient, { backgroundColor: currentApp ? currentApp.color : theme.colors.primary }]}
-      >
+      <View style={[styles.gradient, { backgroundColor: bgColor }]}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -49,36 +49,45 @@ const GatewayScreen = ({ onLogin, onGuest, selectedApp = null }) => {
         >
           {/* Header with Logo */}
           <View style={styles.header}>
-            <View style={[
-              styles.logoContainer,
-              currentApp && { backgroundColor: currentApp.color + '30' }
-            ]}>
+            <View style={styles.logoContainer}>
               <Text style={styles.logoEmoji}>
                 {currentApp ? currentApp.emoji : '🏺'}
               </Text>
             </View>
-            <Text style={[styles.appName, { color: theme.colors.white }]}>
+            <Text style={styles.appName}>
               {currentApp ? currentApp.name : 'Adera'}
             </Text>
             {currentApp && (
-              <Text style={[styles.appSubtext, { color: theme.colors.white + '80' }]}>
+              <Text style={styles.appSubtext}>
                 {currentApp.title}
               </Text>
             )}
           </View>
           
-          {/* Market Illustration */}
+          {/* Illustration */}
           <View style={styles.illustrationContainer}>
             <Text style={styles.marketEmoji}>🏪</Text>
             <Text style={styles.marketText}>Addis Ababa Marketplace</Text>
           </View>
           
+          {/* Feature pills */}
+          <View style={styles.featureRow}>
+            {(currentApp?.ptp
+              ? ['Real-time', 'QR Secure', '24/7']
+              : ['Local', 'Fast Pay', 'Delivery']
+            ).map((feat) => (
+              <View key={feat} style={styles.featurePill}>
+                <Text style={styles.featurePillText}>{feat}</Text>
+              </View>
+            ))}
+          </View>
+          
           {/* Main Content */}
           <View style={styles.content}>
-            <Text style={[styles.welcomeTitle, { color: theme.colors.white }]}>
+            <Text style={styles.welcomeTitle}>
               {currentApp ? `Welcome to ${currentApp.name}` : 'Welcome to Adera'}
             </Text>
-            <Text style={[styles.welcomeSubtitle, { color: theme.colors.white }]}>
+            <Text style={styles.welcomeSubtitle}>
               {currentApp ? currentApp.subtitle : 'Your all-in-one ecosystem for logistics and e-commerce in Addis Ababa.'}
             </Text>
             
@@ -89,18 +98,15 @@ const GatewayScreen = ({ onLogin, onGuest, selectedApp = null }) => {
                 variant="outline"
                 size="lg"
                 onPress={onLogin}
-                style={[styles.primaryButton, { borderColor: theme.colors.white }]}
-                textStyle={{ color: theme.colors.white, fontSize: 18 }}
+                style={[styles.primaryButton, { borderColor: 'rgba(255,255,255,0.9)' }]}
+                textStyle={{ color: '#FFFFFF', fontSize: 17, fontWeight: '600' }}
               />
               
-              <Button
-                title="Continue as Guest"
-                variant="ghost"
-                size="lg"
-                onPress={onGuest}
-                style={styles.secondaryButton}
-                textStyle={{ color: theme.colors.white, fontSize: 16 }}
-              />
+              <TouchableOpacity style={styles.guestButton} onPress={onGuest}>
+                <Text style={styles.guestButtonText}>
+                  Continue as Guest
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -121,74 +127,102 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    minHeight: height, // Ensure minimum height for proper layout
+    minHeight: height,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 40,
+    paddingTop: 48,
     paddingBottom: 20,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   logoEmoji: {
-    fontSize: 40,
+    fontSize: 42,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   appSubtext: {
     fontSize: 16,
     fontWeight: '500',
-    marginTop: 4,
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 6,
   },
   illustrationContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   marketEmoji: {
-    fontSize: 60,
-    marginBottom: 8,
+    fontSize: 56,
+    marginBottom: 10,
   },
   marketText: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
+  },
+  featureRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 24,
+    marginBottom: 8,
+  },
+  featurePill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+  },
+  featurePillText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 80, // AGGRESSIVE bottom padding to prevent overlap
+    paddingHorizontal: 32,
+    paddingBottom: 80,
   },
   welcomeTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 8,
+    color: '#FFFFFF',
+    marginBottom: 10,
   },
   welcomeSubtitle: {
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
-    opacity: 0.9,
-    marginBottom: 32,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 40,
   },
   primaryActions: {
-    marginBottom: 60, // Increased margin for better spacing
+    marginBottom: 60,
   },
   primaryButton: {
-    marginBottom: 16,
-    borderWidth: 2,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  secondaryButton: {
-    opacity: 0.9,
+  guestButton: {
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  guestButtonText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

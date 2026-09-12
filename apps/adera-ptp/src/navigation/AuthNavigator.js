@@ -1,17 +1,14 @@
-
-
 import React, { useEffect, useRef, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen, SignUpScreen, ForgotPasswordScreen, AuthCallbackScreen } from '../screens/Auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GuestNavigator from './GuestNavigator';
 import { useAuth } from '@adera/auth';
-import { LoadingScreen } from '@adera/ui';
-import { View, Text, Button } from 'react-native';
+import { LoadingScreen, useTheme } from '@adera/ui';
+import { View, Text, TouchableOpacity } from 'react-native';
 
 const Stack = createNativeStackNavigator();
-
-const PROFILE_LOAD_TIMEOUT = 8000; // 8 seconds
+const PROFILE_LOAD_TIMEOUT = 8000;
 
 const LoginScreenWrapper = (props) => (
   <SafeAreaView style={{ flex: 1 }}>
@@ -31,15 +28,12 @@ const ForgotPasswordScreenWrapper = (props) => (
   </SafeAreaView>
 );
 
-
 const GuestNavigatorWrapper = (props) => {
   const { navigation } = props;
-  // Provide a fallback if navigation is not passed (web)
   const goBackToAuth = () => {
     if (navigation && navigation.navigate) {
       navigation.navigate('Login');
-    } else if (window && window.location) {
-      // For web fallback, reload or redirect to root
+    } else if (typeof window !== 'undefined' && window.location) {
       window.location.href = '/';
     }
   };
@@ -51,50 +45,41 @@ const GuestNavigatorWrapper = (props) => {
 };
 
 const AuthNavigator = () => {
+  const theme = useTheme();
   const { isLoading, userProfile, authState, refreshSession } = useAuth();
-  // Aggressive runtime logging for state
-  useEffect(() => {
-    console.log('[AuthNavigator][STATE]', { isLoading, userProfile, authState });
-  }, [isLoading, userProfile, authState]);
   const [profileTimeout, setProfileTimeout] = useState(false);
   const timeoutRef = useRef();
 
-  // Aggressively handle profile loading stuck state
   useEffect(() => {
     if (authState === 'authenticated' && !userProfile) {
-      timeoutRef.current = setTimeout(() => {
-        setProfileTimeout(true);
-      }, PROFILE_LOAD_TIMEOUT);
+      timeoutRef.current = setTimeout(() => setProfileTimeout(true), PROFILE_LOAD_TIMEOUT);
     } else {
       setProfileTimeout(false);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, [authState, userProfile]);
 
   if (isLoading && authState !== 'unauthenticated') {
-    console.log('[AuthNavigator][STATE] Loading authentication...');
     return <LoadingScreen message="Loading authentication..." />;
   }
 
   if (authState === 'authenticated' && !userProfile && !profileTimeout) {
-    console.log('[AuthNavigator][STATE] Authenticated but no userProfile, waiting...');
     return <LoadingScreen message="Loading your profile..." />;
   }
 
   if (profileTimeout) {
-    console.log('[AuthNavigator][STATE] Profile load timeout, showing retry UI');
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <Text style={{ fontSize: 18, color: '#d32f2f', marginBottom: 16, textAlign: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background, padding: 32 }}>
+        <Text style={{ fontSize: 18, color: theme.colors.error, marginBottom: 16, textAlign: 'center' }}>
           Unable to load your profile. Please check your connection or try again.
         </Text>
-        <Button title="Retry" onPress={() => {
-          setProfileTimeout(false);
-          refreshSession && refreshSession();
-        }} />
+        <TouchableOpacity
+          onPress={() => { setProfileTimeout(false); refreshSession && refreshSession(); }}
+          style={{ backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
+        >
+          <Text style={{ color: theme.colors.onPrimary, fontWeight: '600', fontSize: 16 }}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -103,7 +88,7 @@ const AuthNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FFFFFF' },
+        contentStyle: { backgroundColor: theme.colors.background },
         animation: 'fade',
       }}
       initialRouteName="Login"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { useTheme } from './ThemeProvider';
 
 const Button = ({
@@ -14,7 +14,8 @@ const Button = ({
   ...props
 }) => {
   const theme = useTheme();
-  
+  const isDark = theme.isDark;
+
   const sizeStyle = styles[size] || styles.md;
   const sizeTextStyle = styles[`${size}Text`] || styles.mdText;
 
@@ -34,7 +35,7 @@ const Button = ({
     outline: {
       backgroundColor: 'transparent',
       borderColor: theme.colors.primary,
-      borderWidth: 2,
+      borderWidth: 1.5,
       textColor: theme.colors.primary,
     },
     ghost: {
@@ -55,8 +56,12 @@ const Button = ({
       backgroundColor,
       borderColor,
       borderWidth,
-      opacity: disabled ? 0.6 : 1,
+      opacity: disabled ? 0.5 : 1,
     },
+    // Subtle elevation for primary/secondary on dark
+    (variant === 'primary' || variant === 'secondary') && isDark
+      ? { ...theme.shadows.sm }
+      : {},
     style,
   ];
 
@@ -65,17 +70,17 @@ const Button = ({
     sizeTextStyle,
     {
       color: textColor,
-      opacity: disabled ? 0.6 : 1,
+      opacity: disabled ? 0.7 : 1,
     },
     textStyle,
   ];
-  
+
   return (
     <TouchableOpacity
       style={buttonStyles}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       {...props}
     >
       {loading ? (
@@ -92,14 +97,11 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
-  
-  // Variants
-  // Sizes
   sm: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -115,13 +117,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     minHeight: 56,
   },
-  
-  // Text styles
   text: {
     fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
-  // Size text
   smText: {
     fontSize: 14,
   },

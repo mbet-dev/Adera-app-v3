@@ -13,18 +13,33 @@ const Card = ({
   ...props 
 }) => {
   const theme = useTheme();
+  const isDark = theme.isDark;
+
+  // Use proper surface container colors for dark mode elevation
+  const getBackgroundColor = () => {
+    if (variant === 'outlined') return 'transparent';
+    switch (elevation) {
+      case 0: return theme.colors.surface;
+      case 1: return theme.colors.surfaceContainerLow;
+      case 2: return theme.colors.surfaceContainer;
+      case 3:
+      case 4:
+      case 5: return theme.colors.surfaceContainerHigh;
+      default: return theme.colors.surfaceContainer;
+    }
+  };
 
   const cardStyle = [
     styles.card,
     {
-      backgroundColor: variant === 'outlined' 
-        ? 'transparent' 
-        : theme.colors.surface,
+      backgroundColor: getBackgroundColor(),
       borderWidth: variant === 'outlined' ? 1 : 0,
-      borderColor: variant === 'outlined' 
-        ? theme.colors.gray[300] 
+      borderColor: variant === 'outlined'
+        ? theme.colors.outlineVariant
         : 'transparent',
       padding: padding,
+      // Apply shadow from theme in dark mode
+      ...(isDark && variant !== 'outlined' ? theme.shadows.sm : {}),
     },
     style,
   ];
@@ -33,7 +48,7 @@ const Card = ({
     return (
       <PaperCard
         style={cardStyle}
-        elevation={variant === 'outlined' ? 0 : elevation}
+        elevation={variant === 'outlined' ? 0 : (isDark ? 0 : elevation)}
         onPress={onPress}
         {...props}
       >
@@ -45,7 +60,7 @@ const Card = ({
   return (
     <PaperCard
       style={cardStyle}
-      elevation={variant === 'outlined' ? 0 : elevation}
+      elevation={variant === 'outlined' ? 0 : (isDark ? 0 : elevation)}
       {...props}
     >
       {children}
@@ -55,7 +70,7 @@ const Card = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 14,
     marginVertical: 8,
   },
 });

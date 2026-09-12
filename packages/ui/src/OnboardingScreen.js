@@ -110,7 +110,7 @@ const OnboardingScreen = ({ onComplete }) => {
                 <Text style={[styles.subtitle, { color: theme.colors.onPrimary }]}>
                   {slide.subtitle}
                 </Text>
-                <Text style={[styles.description, { color: theme.colors.onPrimary }]}>
+                <Text style={[styles.description, { color: theme.colors.onPrimary, opacity: 0.85 }]}>
                   {slide.description}
                 </Text>
               </View>
@@ -130,11 +130,7 @@ const OnboardingScreen = ({ onComplete }) => {
                       index === currentSlide
                         ? theme.colors.onPrimary
                         : theme.colors.onPrimary + '33',
-                    transform: [
-                      {
-                        scale: index === currentSlide ? 1.2 : 1,
-                      },
-                    ],
+                    width: index === currentSlide ? 24 : 10,
                   },
                 ]}
               />
@@ -190,18 +186,18 @@ const styles = StyleSheet.create({
     height: height * 0.7,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   imageContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
   },
   emoji: {
-    fontSize: 48,
+    fontSize: 52,
   },
   flagImage: {
     width: 60,
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 20,
@@ -226,22 +222,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
-    opacity: 0.9,
   },
   footer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     paddingBottom: 32,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 32,
+    gap: 6,
   },
   paginationDot: {
-    width: 10,
     height: 10,
     borderRadius: 5,
-    marginHorizontal: 4,
   },
   buttonRow: {
     flexDirection: 'row',

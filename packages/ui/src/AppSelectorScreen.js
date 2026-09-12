@@ -17,6 +17,7 @@ const { width, height } = Dimensions.get('window');
 
 const AppSelectorScreen = ({ onAppSelect }) => {
   const theme = useTheme();
+  const isDark = theme.isDark;
   const [selectedApp, setSelectedApp] = useState(null);
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
@@ -30,6 +31,8 @@ const AppSelectorScreen = ({ onAppSelect }) => {
       emoji: '📦',
       features: ['Real-time Tracking', 'QR Code Security', 'Partner Network', 'SMS Notifications'],
       color: theme.colors.primary,
+      colorContainer: theme.colors.primaryContainer,
+      colorOnContainer: theme.colors.onPrimaryContainer,
     },
     {
       id: 'shop',
@@ -40,16 +43,16 @@ const AppSelectorScreen = ({ onAppSelect }) => {
       emoji: '🛍️',
       features: ['Local Products', 'Partner Stores', 'Secure Payments', 'Home Delivery'],
       color: theme.colors.secondary,
+      colorContainer: theme.colors.secondaryContainer,
+      colorOnContainer: theme.colors.onSecondaryContainer,
     },
   ];
 
   const handleAppSelection = (appId) => {
     setSelectedApp(appId);
-    
-    // Scale animation for feedback
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 0.95,
+        toValue: 0.96,
         duration: 100,
         useNativeDriver: true,
       }),
@@ -76,13 +79,13 @@ const AppSelectorScreen = ({ onAppSelect }) => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
+          <View style={[styles.logoContainer, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
             <Text style={styles.logoEmoji}>🏺</Text>
           </View>
           <Text style={[styles.appName, { color: theme.colors.onBackground }]}>
             Adera
           </Text>
-          <Text style={[styles.tagline, { color: theme.colors.onBackground + '80' }]}>
+          <Text style={[styles.tagline, { color: theme.colors.onSurfaceVariant }]}>
             Choose Your Experience
           </Text>
         </View>
@@ -92,23 +95,17 @@ const AppSelectorScreen = ({ onAppSelect }) => {
           {apps.map((app) => (
             <Animated.View
               key={app.id}
-              style={[
-                {
-                  transform: [{ scale: selectedApp === app.id ? scaleAnim : 1 }],
-                }
-              ]}
+              style={[{ transform: [{ scale: selectedApp === app.id ? scaleAnim : 1 }] }]}
             >
               <TouchableOpacity
                 style={[
                   styles.appCard,
                   {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: selectedApp === app.id 
-                      ? app.color 
-                      : theme.colors.outline,
-                    borderWidth: selectedApp === app.id ? 3 : 1,
-                    shadowColor: selectedApp === app.id ? app.color : theme.colors.shadow,
-                  }
+                    backgroundColor: selectedApp === app.id ? app.colorContainer : theme.colors.surface,
+                    borderColor: selectedApp === app.id ? app.color : theme.colors.outlineVariant,
+                    borderWidth: selectedApp === app.id ? 2 : 1,
+                    ...(isDark ? theme.shadows.sm : theme.shadows.md),
+                  },
                 ]}
                 onPress={() => handleAppSelection(app.id)}
                 activeOpacity={0.8}
@@ -121,13 +118,13 @@ const AppSelectorScreen = ({ onAppSelect }) => {
                 )}
 
                 {/* App Icon */}
-                <View style={[styles.iconContainer, { backgroundColor: app.color + '20' }]}>
+                <View style={[styles.iconContainer, { backgroundColor: app.colorContainer }]}>
                   <Text style={styles.appEmoji}>{app.emoji}</Text>
                   <Ionicons 
                     name={app.icon} 
-                    size={24} 
-                    color={app.color} 
-                    style={styles.overlayIcon}
+                    size={22} 
+                    color={app.colorOnContainer}
+                    style={[styles.overlayIcon, { backgroundColor: theme.colors.surface }]}
                   />
                 </View>
 
@@ -145,7 +142,7 @@ const AppSelectorScreen = ({ onAppSelect }) => {
 
                   {/* Feature List */}
                   <View style={styles.featureList}>
-                    {app.features.map((feature, index) => (
+                    {app.features.map((feature) => (
                       <View key={feature} style={styles.featureItem}>
                         <View style={[styles.featureBullet, { backgroundColor: app.color }]} />
                         <Text style={[styles.featureText, { color: theme.colors.onSurfaceVariant }]}>
@@ -164,19 +161,19 @@ const AppSelectorScreen = ({ onAppSelect }) => {
         <View style={styles.footer}>
           <Button
             title={selectedApp ? `Continue with ${apps.find(app => app.id === selectedApp)?.name}` : 'Select an App'}
-            variant={selectedApp ? 'solid' : 'outline'}
+            variant="primary"
             size="lg"
             disabled={!selectedApp}
             onPress={handleContinue}
             style={[
               styles.continueButton,
               !selectedApp && { opacity: 0.5 },
-              selectedApp && { backgroundColor: apps.find(app => app.id === selectedApp)?.color }
+              selectedApp && { backgroundColor: apps.find(app => app.id === selectedApp)?.color },
             ]}
             textStyle={{ 
               color: selectedApp ? theme.colors.white : theme.colors.onSurface,
-              fontSize: 18,
-              fontWeight: '600'
+              fontSize: 17,
+              fontWeight: '600',
             }}
           />
           
@@ -198,7 +195,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 80, // AGGRESSIVE bottom padding to prevent overlap
+    paddingBottom: 80,
   },
   header: {
     alignItems: 'center',
@@ -210,7 +207,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -232,13 +228,9 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   appCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 20,
     position: 'relative',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   selectionBadge: {
     position: 'absolute',
@@ -252,9 +244,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -265,9 +257,8 @@ const styles = StyleSheet.create({
   },
   overlayIcon: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    bottom: 4,
+    right: 4,
     borderRadius: 12,
     padding: 4,
   },
@@ -275,14 +266,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   appTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   appSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   appDescription: {
     fontSize: 14,
@@ -295,7 +286,7 @@ const styles = StyleSheet.create({
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   featureBullet: {
     width: 6,
@@ -303,7 +294,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   featureText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   footer: {
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     marginTop: 32,
-    marginBottom: 40, // Increased bottom margin
+    marginBottom: 40,
   },
   disclaimer: {
     fontSize: 12,

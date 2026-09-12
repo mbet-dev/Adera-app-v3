@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -16,14 +17,12 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { Snackbar } from 'react-native-paper';
 import { useAuth, useAuthErrors } from '@adera/auth';
 import { Button, TextInput, useTheme } from '@adera/ui';
-import { Platform } from 'react-native';
 import { usePreferences } from '@adera/preferences';
 import { useRoute } from '@react-navigation/native';
 
-console.log('Platform.OS:', Platform.OS);
-
 const LoginScreen = ({ navigation }) => {
   const theme = useTheme();
+  const isDark = theme.isDark;
   const route = useRoute();
   const { signIn, isLoading, resendConfirmationEmail, checkEmailConfirmationStatus, refreshSession } = useAuth();
   const { getErrorMessage, isNetworkError } = useAuthErrors();
@@ -40,33 +39,16 @@ const LoginScreen = ({ navigation }) => {
 
   useEffect(() => {
     const checkBiometric = async () => {
-      console.log('[LoginScreen] Checking biometric compatibility');
-      if (typeof Platform === 'undefined' || typeof Platform.OS === 'undefined') {
-        console.log('[LoginScreen] Platform or Platform.OS is undefined.');
-        setBiometricAvailable(false);
-        return;
-      }
-      console.log('[LoginScreen] Platform is:', Platform.OS);
-
-      if (Platform?.OS !== 'web') {
+      if (Platform.OS !== 'web') {
         if (!biometricEnabled) {
           setBiometricAvailable(false);
           return;
         }
-
         try {
           const hasHardware = await LocalAuthentication.hasHardwareAsync();
           const isEnrolled = await LocalAuthentication.isEnrolledAsync();
           setBiometricAvailable(hasHardware && isEnrolled);
-
-          console.log('[LoginScreen] Biometric check:', {
-            hasHardware,
-            isEnrolled,
-            available: hasHardware && isEnrolled,
-            platform: Platform.OS
-          });
         } catch (error) {
-          console.error('[LoginScreen] Biometric check error:', error);
           setBiometricAvailable(false);
         }
       } else {
@@ -76,61 +58,30 @@ const LoginScreen = ({ navigation }) => {
     checkBiometric();
   }, [biometricEnabled]);
 
-  // Check for verification success or error messages from route params (callback screen)
   useEffect(() => {
     const params = route.params;
-    
     if (params?.showSuccessMessage && params?.emailVerified) {
       const message = params?.message || 'Email verified successfully! You can now sign in.';
       setSuccessMessage(message);
       setShowVerificationSuccess(true);
-      
-      // Show alert for better visibility
-      Alert.alert(
-        '✅ Email Verified',
-        message,
-        [{ text: 'OK', onPress: () => {
-          setShowVerificationSuccess(false);
-          // Clear params to prevent showing again
-          navigation.setParams({ 
-            showSuccessMessage: false, 
-            emailVerified: false, 
-            message: undefined 
-          });
-        }}]
-      );
+      Alert.alert('✅ Email Verified', message, [{ text: 'OK', onPress: () => {
+        setShowVerificationSuccess(false);
+        navigation.setParams({ showSuccessMessage: false, emailVerified: false, message: undefined });
+      }}]);
     } else if (params?.showPasswordResetMessage) {
       const message = params?.message || 'Password reset email sent! Please check your inbox.';
       setSuccessMessage(message);
-      
-      Alert.alert(
-        '✅ Password Reset',
-        message,
-        [{ text: 'OK', onPress: () => {
-          // Clear params
-          navigation.setParams({ 
-            showPasswordResetMessage: false, 
-            message: undefined 
-          });
-          setSuccessMessage('');
-        }}]
-      );
+      Alert.alert('✅ Password Reset', message, [{ text: 'OK', onPress: () => {
+        navigation.setParams({ showPasswordResetMessage: false, message: undefined });
+        setSuccessMessage('');
+      }}]);
     } else if (params?.showError) {
       const message = params?.message || 'An error occurred. Please try again.';
       setErrorMessage(message);
-      
-      Alert.alert(
-        '⚠️ Error',
-        message,
-        [{ text: 'OK', onPress: () => {
-          // Clear params
-          navigation.setParams({ 
-            showError: false, 
-            message: undefined 
-          });
-          setErrorMessage('');
-        }}]
-      );
+      Alert.alert('⚠️ Error', message, [{ text: 'OK', onPress: () => {
+        navigation.setParams({ showError: false, message: undefined });
+        setErrorMessage('');
+      }}]);
     }
   }, [route.params, navigation]);
 
@@ -146,65 +97,38 @@ const LoginScreen = ({ navigation }) => {
   });
 
   const handleLogin = async (email, password) => {
-    // Clear previous errors
     setErrorMessage('');
     setShowResendLink(false);
     setShowRefreshLink(false);
-
     try {
-      // Attempt sign in
       await signIn(email.trim().toLowerCase(), password);
-      // Navigation is handled by auth state change in AuthProvider
     } catch (error) {
-      console.error('Login error:', error);
       const message = getErrorMessage(error);
-
       if (isNetworkError(error)) {
-        // Network-specific error handling
-        Alert.alert(
-          '🌐 Connection Issue',
-          'Unable to connect to the server. Please check your internet connection and try again.',
-          [
-            { text: 'Retry', onPress: () => handleLogin(email, password) },
-            { text: 'Cancel', style: 'cancel' }
-          ]
-        );
+        Alert.alert('🌐 Connection Issue', 'Unable to connect to the server. Please check your internet connection and try again.', [
+          { text: 'Retry', onPress: () => handleLogin(email, password) },
+          { text: 'Cancel', style: 'cancel' },
+        ]);
       } else if (error.message === 'EMAIL_NOT_CONFIRMED') {
-        // Handle email not confirmed error
         setErrorMessage('Please check your email and click the confirmation link before signing in.');
         setShowResendLink(true);
         setShowRefreshLink(true);
       } else {
-        // Display error in UI
         setErrorMessage(message || 'Login failed. Please try again.');
       }
     }
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
-  };
-
-  const handleSignUp = () => {
-    navigation.navigate('SignUp');
-  };
+  const handleForgotPassword = () => navigation.navigate('ForgotPassword');
+  const handleSignUp = () => navigation.navigate('SignUp');
 
   const handleResendConfirmation = async () => {
     try {
-      await resendConfirmationEmail(email.trim().toLowerCase());
-      Alert.alert(
-        '📧 Email Sent',
-        'A new confirmation email has been sent. Please check your inbox and click the link to confirm your email address.',
-        [{ text: 'OK' }]
-      );
+      await resendConfirmationEmail(errorMessage.includes('@') ? errorMessage : '');
+      Alert.alert('📧 Email Sent', 'A new confirmation email has been sent. Please check your inbox.', [{ text: 'OK' }]);
       setShowResendLink(false);
     } catch (error) {
-      console.error('Resend confirmation error:', error);
-      Alert.alert(
-        '❌ Error',
-        'Failed to resend confirmation email. Please try again later.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('❌ Error', 'Failed to resend confirmation email. Please try again later.', [{ text: 'OK' }]);
     }
   };
 
@@ -213,20 +137,13 @@ const LoginScreen = ({ navigation }) => {
     try {
       await refreshSession();
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const status = await checkEmailConfirmationStatus();
-      
       if (status.confirmed) {
         setErrorMessage('Email confirmed! Logging you in...');
-        await handleLogin();
       } else {
-        Alert.alert(
-          'ℹ️ Not Confirmed Yet',
-          'Your email is still not confirmed. Please check your inbox and click the confirmation link.'
-        );
+        Alert.alert('ℹ️ Not Confirmed Yet', 'Your email is still not confirmed. Please check your inbox and click the confirmation link.');
       }
     } catch (error) {
-      console.error('Refresh session error:', error);
       Alert.alert('❌ Error', `Failed to refresh session: ${error.message}`);
     } finally {
       setIsRefreshing(false);
@@ -234,43 +151,21 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const handleBiometricLogin = async () => {
-    console.log('[LoginScreen] handleBiometricLogin called');
-    console.log('[LoginScreen] Platform.OS in handleBiometricLogin:', Platform.OS);
     try {
-      // Check if biometrics are available first
       if (!biometricAvailable) {
-        Alert.alert(
-          'Biometric Not Available',
-          'Biometric authentication is not available on this device or platform. Please use email/password to sign in.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Biometric Not Available', 'Biometric authentication is not available on this device. Please use email/password.', [{ text: 'OK' }]);
         return;
       }
-
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Sign in with biometrics',
         cancelLabel: 'Cancel',
         disableDeviceFallback: false,
       });
-      console.log('[LoginScreen] Biometric authentication result:', result);
-
       if (result.success) {
-        // TODO: Implement secure storage and retrieval of credentials for biometric login
-        Alert.alert(
-          'Feature Not Implemented',
-          'Biometric login is not yet fully implemented. Please use email and password to log in.',
-          [{ text: 'OK' }]
-        );
-      } else {
-        console.log('Biometric authentication cancelled or failed:', result.error);
+        Alert.alert('Feature Not Implemented', 'Biometric login is not yet fully implemented. Please use email and password.', [{ text: 'OK' }]);
       }
     } catch (error) {
-      console.error('Biometric authentication error:', error);
-      Alert.alert(
-        'Biometric Error',
-        'Biometric authentication failed. Please use email/password to sign in.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Biometric Error', 'Biometric authentication failed. Please use email/password.', [{ text: 'OK' }]);
     }
   };
 
@@ -288,69 +183,46 @@ const LoginScreen = ({ navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <View style={[styles.logoContainer, { backgroundColor: theme.colors.primaryContainer }]}>
-              <Ionicons
-                name="cube"
-                size={48}
-                color={theme.colors.primary}
-              />
+              <Ionicons name="cube" size={44} color={theme.colors.primary} />
             </View>
-            <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+            <Text style={[styles.title, { color: theme.colors.onSurface }]}>
               Welcome Back
             </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
+            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
               Sign in to continue to Adera
             </Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Success message banner */}
+            {/* Success banner */}
             {successMessage && (
-              <View style={[styles.successBanner, { backgroundColor: theme.colors.primaryContainer }]}>
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text style={[styles.successBannerText, { color: theme.colors.primary }]}>
-                  {successMessage}
-                </Text>
+              <View style={[styles.successBanner, { backgroundColor: theme.colors.successContainer }]}>
+                <MaterialCommunityIcons name="check-circle" size={20} color={theme.colors.success} />
+                <Text style={[styles.bannerText, { color: theme.colors.onSuccessContainer }]}>{successMessage}</Text>
               </View>
             )}
 
-            {/* Existing error banner */}
+            {/* Error banner */}
             {errorMessage && (
               <View style={[styles.errorBanner, { backgroundColor: theme.colors.errorContainer }]}>
-                <MaterialCommunityIcons
-                  name="alert-circle"
-                  size={20}
-                  color={theme.colors.error}
-                />
+                <MaterialCommunityIcons name="alert-circle" size={20} color={theme.colors.error} />
                 <View style={styles.errorContent}>
-                  <Text style={[styles.errorBannerText, { color: theme.colors.error }]}>
-                    {errorMessage}
-                  </Text>
+                  <Text style={[styles.bannerText, { color: theme.colors.onErrorContainer }]}>{errorMessage}</Text>
                   {(showResendLink || showRefreshLink) && (
                     <View style={styles.errorActions}>
                       {showRefreshLink && (
-                        <TouchableOpacity 
-                          onPress={handleRefreshSession} 
-                          disabled={isRefreshing}
-                          style={[styles.errorActionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                        >
+                        <TouchableOpacity onPress={handleRefreshSession} disabled={isRefreshing}
+                          style={[styles.errorActionButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
                           <Text style={[styles.errorActionText, { color: theme.colors.primary }]}>
                             {isRefreshing ? 'Refreshing...' : '🔄 Refresh Session'}
                           </Text>
                         </TouchableOpacity>
                       )}
                       {showResendLink && (
-                        <TouchableOpacity 
-                          onPress={handleResendConfirmation}
-                          style={[styles.errorActionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                        >
-                          <Text style={[styles.errorActionText, { color: theme.colors.primary }]}>
-                            📧 Resend Email
-                          </Text>
+                        <TouchableOpacity onPress={handleResendConfirmation}
+                          style={[styles.errorActionButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+                          <Text style={[styles.errorActionText, { color: theme.colors.primary }]}>📧 Resend Email</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -394,22 +266,10 @@ const LoginScreen = ({ navigation }) => {
                   {touched.password && errors.password && (
                     <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.password}</Text>
                   )}
-                  <TouchableOpacity
-                    onPress={handleForgotPassword}
-                    style={styles.forgotPassword}
-                  >
-                    <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>
-                      Forgot Password?
-                    </Text>
+                  <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+                    <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>Forgot Password?</Text>
                   </TouchableOpacity>
-                  <Button
-                    title="Sign In"
-                    onPress={handleSubmit}
-                    loading={isLoading}
-                    disabled={isLoading}
-                    size="lg"
-                    style={styles.signInButton}
-                  />
+                  <Button title="Sign In" onPress={handleSubmit} loading={isLoading} disabled={isLoading} size="lg" style={styles.signInButton} />
                 </>
               )}
             </Formik>
@@ -417,59 +277,43 @@ const LoginScreen = ({ navigation }) => {
             {biometricAvailable && (
               <TouchableOpacity
                 onPress={handleBiometricLogin}
-                style={[styles.biometricButton, { borderColor: theme.colors.outline }]}
+                style={[styles.biometricButton, { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surfaceContainerLow }]}
                 disabled={isLoading}
               >
-                <MaterialCommunityIcons
-                  name="fingerprint"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-                <Text style={[styles.biometricButtonText, { color: theme.colors.primary }]}>
-                  Sign in with biometrics
-                </Text>
+                <MaterialCommunityIcons name="fingerprint" size={24} color={theme.colors.primary} />
+                <Text style={[styles.biometricButtonText, { color: theme.colors.primary }]}>Sign in with biometrics</Text>
               </TouchableOpacity>
             )}
+
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.text.secondary }]}>
-                OR
-              </Text>
-              <View style={[styles.dividerLine, { backgroundColor: theme.colors.outline }]} />
+              <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
             </View>
+
             {/* Guest Mode */}
-            <Button
-              title="Continue as Guest"
-              onPress={() => navigation.navigate('Guest')}
-              variant="outline"
-              size="lg"
-              style={styles.guestButton}
-            />
+            <Button title="Continue as Guest" onPress={() => navigation.navigate('Guest')} variant="outline" size="lg" style={styles.guestButton} />
           </View>
+
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: theme.colors.text.secondary }]}>
-              Don't have an account? 
-            </Text>
+            <Text style={[styles.footerText, { color: theme.colors.onSurfaceVariant }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={handleSignUp}>
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]}>
-                Sign Up
-              </Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
+
         <Snackbar
           visible={showVerificationSuccess}
           onDismiss={() => setShowVerificationSuccess(false)}
           duration={6000}
-          style={{ marginBottom: Platform.OS === 'web' ? 20 : 0 }}
-          action={{
-            label: 'Dismiss',
-            onPress: () => setShowVerificationSuccess(false),
-          }}
+          style={{ marginBottom: Platform.OS === 'web' ? 20 : 0, backgroundColor: theme.colors.inverseSurface }}
+          labelStyle={{ color: theme.colors.inverseOnSurface }}
+          action={{ label: 'Dismiss', onPress: () => setShowVerificationSuccess(false) }}
         >
-          🎉 Email verified successfully! Your account is now active. Please sign in to continue.
+          🎉 Email verified! Your account is now active. Please sign in.
         </Snackbar>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -477,158 +321,34 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 60, // AGGRESSIVE bottom padding to prevent overlap
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 32,
-    marginBottom: 32,
-  },
-  logoContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  form: {
-    flex: 1,
-  },
-  successBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    gap: 8,
-  },
-  successBannerText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  errorContent: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  errorBannerText: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  errorActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  errorActionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorActionText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  inputIcon: {
-    marginLeft: 12,
-  },
-  eyeIcon: {
-    padding: 12,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: -8,
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  signInButton: {
-    marginBottom: 24,
-  },
-  biometricButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 24,
-    gap: 12,
-  },
-  biometricButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  guestButton: {
-    marginBottom: 24,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 'auto',
-    paddingTop: 24,
-    paddingBottom: 20, // Extra padding for footer
-  },
-  footerText: {
-    fontSize: 14,
-  },
-  footerLink: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  errorText: { // Added error text style
-    fontSize: 12,
-    marginTop: 4,
-  },
+  container: { flex: 1 },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 60 },
+  header: { alignItems: 'center', marginTop: 32, marginBottom: 32 },
+  logoContainer: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  title: { fontSize: 28, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 16, textAlign: 'center' },
+  form: { flex: 1 },
+  successBanner: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 16, gap: 10 },
+  errorBanner: { flexDirection: 'row', alignItems: 'flex-start', padding: 14, borderRadius: 12, marginBottom: 16 },
+  errorContent: { flex: 1, marginLeft: 10 },
+  bannerText: { fontSize: 14, fontWeight: '500' },
+  errorActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  errorActionButton: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10, minHeight: 36, justifyContent: 'center', alignItems: 'center' },
+  errorActionText: { fontSize: 13, fontWeight: '600' },
+  forgotPassword: { alignSelf: 'flex-end', marginTop: -8, marginBottom: 24 },
+  forgotPasswordText: { fontSize: 14, fontWeight: '600' },
+  signInButton: { marginBottom: 24 },
+  biometricButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderRadius: 14, borderWidth: 1, marginBottom: 24, gap: 12 },
+  biometricButtonText: { fontSize: 16, fontWeight: '600' },
+  divider: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { marginHorizontal: 16, fontSize: 14, fontWeight: '500' },
+  guestButton: { marginBottom: 24 },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'auto', paddingTop: 24, paddingBottom: 20 },
+  footerText: { fontSize: 14 },
+  footerLink: { fontSize: 14, fontWeight: '600' },
+  errorText: { fontSize: 12, marginTop: 4 },
 });
 
 export default LoginScreen;

@@ -17,6 +17,8 @@ const TextInput = ({
   ...props
 }) => {
   const theme = useTheme();
+  const isDark = theme.isDark;
+
   const keyboardTypeMap = {
     tel: 'phone-pad',
     email: 'email-address',
@@ -39,7 +41,6 @@ const TextInput = ({
 
   const resolvedKeyboardType = incomingKeyboardType || keyboardTypeMap[webType] || 'default';
 
-  // Handle web-specific input types and modes
   const webProps = Platform.OS === 'web'
     ? {
         inputMode: inputModeMap[webType] || undefined,
@@ -47,7 +48,6 @@ const TextInput = ({
       }
     : {};
 
-  // Handle left icon
   const leftComponent = leftIcon ? (
     <PaperTextInput.Icon icon={leftIcon} />
   ) : left;
@@ -62,12 +62,22 @@ const TextInput = ({
           colors: {
             primary: theme.colors.primary,
             error: theme.colors.error,
+            text: theme.colors.onSurface,
+            placeholder: theme.colors.onSurfaceVariant,
+            background: theme.colors.surface,
+            surface: theme.colors.surface,
+            outline: error ? theme.colors.error : theme.colors.outline,
+            outlineVariant: theme.colors.outlineVariant,
           },
         }}
         outlineStyle={{
-          borderColor: error ? theme.colors.error : theme.colors.outline,
+          borderColor: error ? theme.colors.error : theme.colors.outlineVariant,
+          borderRadius: theme.borderRadius.md,
         }}
-        style={styles.input}
+        contentStyle={{
+          color: theme.colors.onSurface,
+        }}
+        style={[styles.input, { backgroundColor: theme.colors.surface }]}
         left={leftComponent}
         right={right}
         keyboardType={resolvedKeyboardType}
@@ -79,7 +89,7 @@ const TextInput = ({
           style={[
             styles.helperText,
             {
-              color: error ? theme.colors.error : theme.colors.text.secondary,
+              color: error ? theme.colors.error : theme.colors.onSurfaceVariant,
             },
           ]}
         >

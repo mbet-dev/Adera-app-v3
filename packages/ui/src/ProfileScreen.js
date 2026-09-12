@@ -149,7 +149,7 @@ const ProfileScreen = ({ user, menuItems, appVersion = 'v1.0.0' }) => {
             value={item.value}
             onValueChange={item.onToggle}
             trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
-            thumbColor="#FFF"
+            thumbColor={theme.colors.white}
           />
         </View>
       );
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 14,
     gap: 12,
   },
   signOutText: {
