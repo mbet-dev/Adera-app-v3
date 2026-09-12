@@ -10,17 +10,28 @@
     "dev": "expo start --port 8081"
   },
   "dependencies": {
+    "@adera/auth": "file:../../packages/auth",
+    "@adera/preferences": "file:../../packages/preferences",
+    "@adera/ui": "file:../../packages/ui",
+    "@adera/maps": "file:../../packages/maps",
+    "@expo/vector-icons": "^15.0.3",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
     "expo": "~54.0.25",
+    "expo-camera": "~16.1.6",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-location": "~18.1.3",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "@adera/ui": "file:../../packages/ui",
-    "expo-linear-gradient": "~15.0.7",
-    "@expo/vector-icons": "^15.0.3",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-maps": "^1.20.1",
     "react-native-pager-view": "6.9.1",
-    "react-native-safe-area-context": "~5.6.1",
-    "react-native-screens": "~4.16.0"
+    "react-native-paper": "^5.14.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "zustand": "4.5.2"
   },
   "private": true
 }

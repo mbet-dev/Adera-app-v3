@@ -7,6 +7,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@adera/auth';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@adera/auth/src/supabase';
+import NotificationBell from '../../components/NotificationBell';
 
 const STATUS_LABELS = ['Created', 'At Drop-off', 'In Transit', 'At Hub', 'Dispatched', 'At Pickup Point', 'Delivered'];
 
@@ -144,6 +145,7 @@ const CustomerDashboard = () => {
             <Text style={[styles.greeting, { color: theme.colors.onSurface }]}>Hello, {welcomeName}!</Text>
             <Text style={[styles.greetingSub, { color: theme.colors.onSurfaceVariant }]}>Deliveries synced across Addis</Text>
           </View>
+          <NotificationBell size={22} color={theme.colors.primary} />
           <TouchableOpacity
             style={[styles.profileButton, { backgroundColor: theme.colors.primaryContainer }]}
             onPress={() => navigation?.navigate?.('profile')}
@@ -300,7 +302,7 @@ const CustomerDashboard = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 120, paddingHorizontal: 20, gap: 24 },
-  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
+  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 8 },
   greeting: { fontSize: 18, fontWeight: '700' },
   greetingSub: { fontSize: 13, marginTop: 2 },
   profileButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },

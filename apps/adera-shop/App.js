@@ -1,18 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet } from 'react-native';
-import { ThemeProvider, OnboardingScreen, AppSelectorScreen, GatewayScreen, LoadingScreen, MarketDiscoveryScreen } from '@adera/ui';
-
+import { View, StyleSheet, Platform } from 'react-native';
+import { ThemeProvider, OnboardingScreen, AppSelectorScreen, GatewayScreen, LoadingScreen, ErrorBoundary } from '@adera/ui';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthProvider, useAuth } from '@adera/auth';
+import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import Constants from 'expo-constants';
 
-// Main App Component
+// Screens
+import MarketDiscoveryScreen from './screens/MarketDiscoveryScreen';
+import ProductDetailScreen from './screens/ProductDetailScreen';
+import ShoppingCartScreen from './screens/ShoppingCartScreen';
+import OrderHistoryScreen from './screens/OrderHistoryScreen';
+
+const Stack = createNativeStackNavigator();
+
+function ShopNavigator({ onLoginRequest }) {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="market">
+        {(props) => <MarketDiscoveryScreen {...props} onLoginRequest={onLoginRequest} />}
+      </Stack.Screen>
+      <Stack.Screen name="productDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="cart" component={ShoppingCartScreen} />
+      <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function AuthShopNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="market">
+        {({ navigation }) => (
+          <MarketDiscoveryScreen
+            navigation={navigation}
+            onLoginRequest={() => {}}
+          />
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="productDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="cart" component={ShoppingCartScreen} />
+      <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+    </Stack.Navigator>
+  );
+}
+
 function AppContent() {
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [showAppSelector, setShowAppSelector] = useState(false);
   const [showGateway, setShowGateway] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null);
   const [guestMode, setGuestMode] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
@@ -22,30 +64,21 @@ function AppContent() {
   const handleAppSelect = (appType) => {
     setSelectedApp(appType);
     setShowAppSelector(false);
-    // For Shop app, only proceed if they selected Shop
     if (appType === 'shop') {
       setShowGateway(true);
     } else {
-      // If they selected PTP, redirect them to the PTP app
-      // For now, we'll show a message or redirect logic
       setShowGateway(true);
     }
   };
 
   const handleLogin = () => {
-    setIsAuthenticated(true);
     setShowGateway(false);
-    // TODO: Navigate to authenticated app
+    setGuestMode(false);
   };
 
   const handleGuest = () => {
     setShowGateway(false);
     setGuestMode(true);
-  };
-
-  const handleBackToAuth = () => {
-    setGuestMode(false);
-    setShowGateway(true);
   };
 
   const handleBackToSelector = () => {
@@ -54,26 +87,36 @@ function AppContent() {
     setShowAppSelector(true);
   };
 
-  // If authenticated, show main app
+  if (isLoading) {
+    return <LoadingScreen message="Initializing Adera Shop…" />;
+  }
+
+  // Authenticated users go straight to the shop
   if (isAuthenticated) {
+    return <AuthShopNavigator />;
+  }
+
+  // Guest mode
+  if (guestMode) {
     return (
-      <View style={styles.mainContent}>
-        {/* TODO: Implement Shop app navigation */}
-      </View>
+      <ShopNavigator
+        onLoginRequest={() => {
+          setGuestMode(false);
+          setShowGateway(true);
+        }}
+      />
     );
   }
 
-  // Show onboarding flow for new users
+  // Onboarding flow
   if (showOnboarding) {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
-  // Show app selector screen
   if (showAppSelector) {
     return <AppSelectorScreen onAppSelect={handleAppSelect} />;
   }
 
-  // Show gateway/auth screen
   if (showGateway) {
     return (
       <GatewayScreen
@@ -84,32 +127,43 @@ function AppContent() {
     );
   }
 
-  // Show guest mode for browsing
-  if (guestMode) {
-    return (
-      <View style={styles.mainContent}>
-        <MarketDiscoveryScreen
-          onLoginRequest={handleBackToAuth}
-          onBackToSelector={handleBackToSelector}
-        />
-      </View>
-    );
-  }
-
-  // Fallback
-  return <LoadingScreen message="Loading..." />;
+  return <LoadingScreen message="Loading…" />;
 }
 
-// Root App with Providers
 export default function App() {
+  const AppWithTheme = () => {
+    const { themeMode, isReady } = usePreferences();
+
+    if (!isReady) {
+      return <LoadingScreen message="Loading preferences…" />;
+    }
+
+    const linking = {
+      prefixes: [],
+      config: {},
+    };
+
+    return (
+      <ThemeProvider forceLightMode={false} initialMode={themeMode}>
+        <AuthProvider>
+          <NavigationContainer linking={linking} theme={DefaultTheme}>
+            <ErrorBoundary fallbackMessage="Adera Shop needs to restart.">
+              <View style={styles.container}>
+                <StatusBar style="auto" />
+                <AppContent />
+              </View>
+            </ErrorBoundary>
+          </NavigationContainer>
+        </AuthProvider>
+      </ThemeProvider>
+    );
+  };
+
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <View style={styles.container}>
-          <StatusBar style="dark" backgroundColor="#FFFFFF" />
-          <AppContent />
-        </View>
-      </ThemeProvider>
+      <PreferencesProvider>
+        <AppWithTheme />
+      </PreferencesProvider>
     </SafeAreaProvider>
   );
 }
@@ -117,12 +171,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  mainContent: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
 });
