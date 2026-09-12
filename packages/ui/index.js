@@ -24,6 +24,7 @@ export * from './src/components/NotificationContainer';
 export { useProfileSettings } from './src/hooks/useProfileSettings';
 export { default as CustomFAB } from './src/components/CustomFAB';
 export { default as SignupSuccessModal } from './src/components/SignupSuccessModal';
+export { default as ErrorBoundary } from './src/components/ErrorBoundary';
 
 // ProfileScreen export moved to end to avoid require cycle
 export { default as ProfileScreen } from './src/ProfileScreen';

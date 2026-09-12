@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Dimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import { SafeArea, Card, useTheme, StatusBadge } from '@adera/ui';
@@ -6,6 +6,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@adera/auth';
 import { useNavigation } from '@react-navigation/native';
+import { supabase } from '@adera/auth/src/supabase';
+
+const STATUS_LABELS = ['Created', 'At Drop-off', 'In Transit', 'At Hub', 'Dispatched', 'At Pickup Point', 'Delivered'];
+
+function statusToLabel(status) {
+  return STATUS_LABELS[status] || 'Unknown';
+}
+
+function statusTone(status, isDark) {
+  const tones = {
+    0: isDark ? '#9E9E9E' : '#757575',
+    1: isDark ? '#81C784' : '#4CAF50',
+    2: isDark ? '#FFB74D' : '#FF9800',
+    3: isDark ? '#B39DDB' : '#7C4DFF',
+    4: isDark ? '#64B5F6' : '#03A9F4',
+    5: isDark ? '#90CAF9' : '#1565C0',
+    6: isDark ? '#81C784' : '#2E7D32',
+  };
+  return tones[status] || tones[0];
+}
 
 const { width } = Dimensions.get('window');
 
@@ -15,82 +35,96 @@ const CustomerDashboard = () => {
   const { signOut, userProfile } = useAuth();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const [walletBalance] = useState(1250.5);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [parcels, setParcels] = useState([]);
+  const [parcelStats, setParcelStats] = useState({ active: 0, delivered: 0, total: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const quickActions = useMemo(() => [
-    {
-      id: 'send', title: 'Send Parcel', icon: 'package-variant',
-      color: theme.colors.primary, bg: theme.colors.primaryContainer,
-      action: () => navigation?.navigate?.('create'),
-    },
-    {
-      id: 'track', title: 'Track Parcel', icon: 'map-marker-path',
-      color: theme.colors.secondary, bg: theme.colors.secondaryContainer,
-      action: () => navigation?.navigate?.('track'),
-    },
-    {
-      id: 'history', title: 'History', icon: 'history',
-      color: theme.colors.tertiary, bg: theme.colors.tertiaryContainer,
-      action: () => navigation?.navigate?.('history'),
-    },
-    {
-      id: 'wallet', title: 'Top Up', icon: 'wallet-plus',
-      color: theme.colors.info, bg: theme.colors.infoContainer,
-      action: () => navigation?.navigate?.('wallet'),
-    },
-    {
-      id: 'logout', title: 'Sign Out', icon: 'logout',
-      color: theme.colors.error, bg: theme.colors.errorContainer,
-      action: () => signOut(navigation),
-    },
-  ], [navigation, signOut, theme.colors]);
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  const parcelSummary = useMemo(() => [
-    { id: 'active', label: 'Active', value: '2', tone: isDark ? '#FFB74D' : '#FF9800', icon: 'progress-clock' },
-    { id: 'delivered', label: 'Delivered', value: '12', tone: isDark ? '#81C784' : '#4CAF50', icon: 'check-circle' },
-    { id: 'scheduled', label: 'Scheduled', value: '3', tone: isDark ? '#64B5F6' : '#03A9F4', icon: 'calendar-clock' },
-    { id: 'issues', label: 'Issues', value: '0', tone: isDark ? '#EF9A9A' : '#E57373', icon: 'alert-circle' },
-  ], [isDark]);
+      // Fetch parcels belonging to this user
+      const { data: parcelData, error: parcelError } = await supabase
+        .from('parcels')
+        .select('id, tracking_id, status, recipient_name, estimated_delivery, created_at, delivery_address')
+        .eq('sender_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-  const recentParcels = useMemo(() => [
-    {
-      id: 'ADE20250112-4', recipient: 'Beza Tesfaye', status: 'In Transit to Hub',
-      eta: 'Arrives today 18:40', tone: theme.colors.primary,
-      steps: ['Created', 'Drop-off', 'Hub in-bound'],
-    },
-    {
-      id: 'ADE20250109-8', recipient: 'Samuel Tadesse', status: 'Ready for Pickup',
-      eta: 'Pickup by 24 Jan', tone: isDark ? '#FFD54F' : '#FFB300',
-      steps: ['Created', 'At Pickup Partner'],
-    },
-  ], [theme.colors.primary, isDark]);
+      if (!parcelError && parcelData) {
+        setParcels(parcelData);
 
-  const curatedServices = useMemo(() => [
-    {
-      id: 'telebirr-wallet', icon: 'cash-multiple', title: 'Wallet & Payments',
-      caption: 'Top-up via Telebirr or Chapa instantly',
-      tone: isDark ? '#4DB6AC' : '#26A69A',
-      action: () => navigation?.navigate?.('wallet'),
-    },
-    {
-      id: 'shop-sync', icon: 'storefront-outline', title: 'Shop Integrations',
-      caption: 'Sync with partner marketplaces for auto-delivery',
-      tone: isDark ? '#B39DDB' : '#7C4DFF',
-      action: () => navigation?.navigate?.('services'),
-    },
-    {
-      id: 'support', icon: 'headset', title: 'Concierge Support',
-      caption: '24/7 multilingual chat & callback assistance',
-      tone: isDark ? '#EF9A9A' : '#EF5350',
-      action: () => navigation?.navigate?.('support'),
-    },
-  ], [isDark, navigation]);
+        // Compute stats from all parcels (not just the 5 displayed)
+        const { count: totalCount } = await supabase
+          .from('parcels')
+          .select('*', { count: 'exact', head: true })
+          .eq('sender_id', user.id);
+
+        const { count: deliveredCount } = await supabase
+          .from('parcels')
+          .select('*', { count: 'exact', head: true })
+          .eq('sender_id', user.id)
+          .eq('status', 6);
+
+        const activeCount = (totalCount || 0) - (deliveredCount || 0);
+
+        setParcelStats({
+          active: activeCount,
+          delivered: deliveredCount || 0,
+          total: totalCount || 0,
+        });
+      }
+
+      // Attempt to fetch wallet balance (table may not exist yet)
+      try {
+        const { data: walletData, error: walletError } = await supabase
+          .from('wallets')
+          .select('balance')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!walletError && walletData) {
+          setWalletBalance(Number(walletData.balance) || 0);
+        }
+      } catch {
+        // Wallet table may not exist yet — keep default 0
+      }
+    } catch (err) {
+      console.error('[CustomerDashboard] Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    await fetchDashboardData();
     setRefreshing(false);
   };
+
+  const quickActions = useMemo(() => [
+    { id: 'send', title: 'Send Parcel', icon: 'package-variant', color: theme.colors.primary, bg: theme.colors.primaryContainer, action: () => navigation?.navigate?.('create') },
+    { id: 'track', title: 'Track Parcel', icon: 'map-marker-path', color: theme.colors.secondary, bg: theme.colors.secondaryContainer, action: () => navigation?.navigate?.('track') },
+    { id: 'history', title: 'History', icon: 'history', color: theme.colors.tertiary, bg: theme.colors.tertiaryContainer, action: () => navigation?.navigate?.('history') },
+    { id: 'wallet', title: 'Top Up', icon: 'wallet-plus', color: theme.colors.info, bg: theme.colors.infoContainer, action: () => navigation?.navigate?.('wallet') },
+    { id: 'logout', title: 'Sign Out', icon: 'logout', color: theme.colors.error, bg: theme.colors.errorContainer, action: () => signOut(navigation) },
+  ], [navigation, signOut, theme.colors]);
+
+  const parcelSummary = useMemo(() => [
+    { id: 'active', label: 'Active', value: String(parcelStats.active), tone: isDark ? '#FFB74D' : '#FF9800', icon: 'progress-clock' },
+    { id: 'delivered', label: 'Delivered', value: String(parcelStats.delivered), tone: isDark ? '#81C784' : '#4CAF50', icon: 'check-circle' },
+    { id: 'total', label: 'All Time', value: String(parcelStats.total), tone: isDark ? '#64B5F6' : '#03A9F4', icon: 'package' },
+  ], [parcelStats, isDark]);
+
+  const curatedServices = useMemo(() => [
+    { id: 'telebirr-wallet', icon: 'cash-multiple', title: 'Wallet & Payments', caption: 'Top-up via Telebirr or Chapa instantly', tone: isDark ? '#4DB6AC' : '#26A69A', action: () => navigation?.navigate?.('wallet') },
+    { id: 'shop-sync', icon: 'storefront-outline', title: 'Shop Integrations', caption: 'Sync with partner marketplaces for auto-delivery', tone: isDark ? '#B39DDB' : '#7C4DFF', action: () => navigation?.navigate?.('services') },
+    { id: 'support', icon: 'headset', title: 'Concierge Support', caption: '24/7 multilingual chat & callback assistance', tone: isDark ? '#EF9A9A' : '#EF5350', action: () => navigation?.navigate?.('support') },
+  ], [isDark, navigation]);
 
   const welcomeName = userProfile?.first_name
     ? `${userProfile.first_name} ${userProfile.last_name ?? ''}`.trim()
@@ -118,7 +152,7 @@ const CustomerDashboard = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Wallet Card — uses gradient */}
+        {/* Wallet Card */}
         <LinearGradient colors={theme.gradients.wallet} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.walletCard}>
           <View style={styles.walletHeader}>
             <View>
@@ -147,12 +181,8 @@ const CustomerDashboard = () => {
           <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Quick Actions</Text>
           <View style={styles.quickActionGrid}>
             {quickActions.map(action => (
-              <TouchableOpacity
-                key={action.id}
-                onPress={action.action}
-                activeOpacity={0.8}
-                style={[styles.quickCard, { backgroundColor: action.bg }]}
-              >
+              <TouchableOpacity key={action.id} onPress={action.action} activeOpacity={0.8}
+                style={[styles.quickCard, { backgroundColor: action.bg }]}>
                 <MaterialCommunityIcons name={action.icon} size={26} color={action.color} />
                 <Text style={[styles.quickCardTitle, { color: action.color }]}>{action.title}</Text>
               </TouchableOpacity>
@@ -179,35 +209,54 @@ const CustomerDashboard = () => {
         {/* Active Parcels */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Active Parcels</Text>
-            <TouchableOpacity onPress={() => navigation?.navigate?.('track')}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Recent Parcels</Text>
+            <TouchableOpacity onPress={() => navigation?.navigate?.('history')}>
               <Text style={[styles.link, { color: theme.colors.primary }]}>View all</Text>
             </TouchableOpacity>
           </View>
-          {recentParcels.map(parcel => (
-            <Card key={parcel.id} style={styles.parcelCard} elevation={1}>
-              <View style={styles.parcelHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.parcelId, { color: theme.colors.onSurface }]}>{parcel.id}</Text>
-                  <Text style={[styles.parcelRecipient, { color: theme.colors.onSurfaceVariant }]}>To {parcel.recipient}</Text>
-                </View>
-                <StatusBadge tone={parcel.status.includes('Ready') ? 'success' : 'info'} label={parcel.status.toUpperCase()} />
-              </View>
-              <View style={styles.parcelTimeline}>
-                {parcel.steps.map((step, index) => (
-                  <View key={step} style={styles.timelineStep}>
-                    <View style={[styles.timelineDot, { backgroundColor: parcel.tone }]} />
-                    <Text style={[styles.timelineLabel, { color: theme.colors.onSurfaceVariant }]}>{step}</Text>
-                    {index !== parcel.steps.length - 1 && <View style={[styles.timelineLine, { borderColor: `${parcel.tone}55` }]} />}
-                  </View>
-                ))}
-              </View>
-              <View style={styles.parcelFooter}>
-                <MaterialCommunityIcons name="clock-outline" size={16} color={parcel.tone} />
-                <Text style={[styles.parcelEta, { color: parcel.tone }]}>{parcel.eta}</Text>
-              </View>
+          {parcels.length === 0 && !loading ? (
+            <Card style={[styles.parcelCard, { alignItems: 'center', paddingVertical: 32 }]} elevation={1}>
+              <MaterialCommunityIcons name="package-variant" size={40} color={theme.colors.onSurfaceVariant} />
+              <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant, marginTop: 12 }]}>
+                No parcels yet. Send your first parcel!
+              </Text>
+              <TouchableOpacity
+                style={[styles.emptyButton, { backgroundColor: theme.colors.primary }]}
+                onPress={() => navigation?.navigate?.('create')}
+              >
+                <Text style={{ color: theme.colors.onPrimary, fontWeight: '600' }}>Send Parcel</Text>
+              </TouchableOpacity>
             </Card>
-          ))}
+          ) : (
+            parcels.map(parcel => {
+              const tone = statusTone(parcel.status, isDark);
+              return (
+                <Card key={parcel.id} style={styles.parcelCard} elevation={1}>
+                  <View style={styles.parcelHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.parcelId, { color: theme.colors.onSurface }]}>#{parcel.tracking_id}</Text>
+                      <Text style={[styles.parcelRecipient, { color: theme.colors.onSurfaceVariant }]}>To {parcel.recipient_name}</Text>
+                    </View>
+                    <StatusBadge tone={tone} label={statusToLabel(parcel.status).toUpperCase()} />
+                  </View>
+                  {parcel.delivery_address && (
+                    <View style={[styles.parcelAddress, { borderTopColor: theme.colors.outlineVariant }]}>
+                      <Ionicons name="location-outline" size={14} color={theme.colors.onSurfaceVariant} />
+                      <Text style={[styles.addressText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                        {parcel.delivery_address}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.parcelFooter}>
+                    <MaterialCommunityIcons name="clock-outline" size={14} color={theme.colors.onSurfaceVariant} />
+                    <Text style={[styles.parcelDate, { color: theme.colors.onSurfaceVariant }]}>
+                      {new Date(parcel.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </Text>
+                  </View>
+                </Card>
+              );
+            })
+          )}
         </View>
 
         {/* Explore Services */}
@@ -269,7 +318,7 @@ const styles = StyleSheet.create({
   quickCard: { padding: 18, borderRadius: 18, flexBasis: '47%', gap: 10 },
   quickCardTitle: { fontWeight: '600', fontSize: 15 },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  summaryCard: { flexBasis: '47%', padding: 16, borderRadius: 16, gap: 8 },
+  summaryCard: { flexBasis: '30%', padding: 16, borderRadius: 16, gap: 8, alignItems: 'center' },
   summaryIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   summaryValue: { fontWeight: '700', fontSize: 22 },
   summaryLabel: { fontSize: 12, letterSpacing: 0.4 },
@@ -279,13 +328,12 @@ const styles = StyleSheet.create({
   parcelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   parcelId: { fontWeight: '700', fontSize: 16 },
   parcelRecipient: { fontSize: 13, marginTop: 2 },
-  parcelTimeline: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' },
-  timelineStep: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  timelineDot: { width: 10, height: 10, borderRadius: 5 },
-  timelineLabel: { fontSize: 12 },
-  timelineLine: { borderLeftWidth: 1, height: 16 },
-  parcelFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  parcelEta: { fontWeight: '600', fontSize: 13 },
+  parcelAddress: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1, borderTopStyle: 'solid', paddingTop: 10 },
+  addressText: { fontSize: 12, flex: 1 },
+  parcelFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  parcelDate: { fontSize: 12 },
+  emptyText: { fontSize: 14, textAlign: 'center' },
+  emptyButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
   serviceScroller: { gap: 12, paddingVertical: 4 },
   serviceChip: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 16, borderRadius: 18, borderWidth: 1, minWidth: 240 },
   serviceMeta: { gap: 4, flexShrink: 1 },

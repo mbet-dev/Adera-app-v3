@@ -304,7 +304,7 @@ export const useProfileSettings = (roleType = 'customer') => {
           onPress={(e) => e.stopPropagation()}
         >
           <View style={[modalStyles.modalContent, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[modalStyles.modalTitle, { color: theme.colors.text.primary }]}>Choose a Theme</Text>
+          <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose a Theme</Text>
           {['system', 'light', 'dark'].map(mode => (
             <TouchableOpacity
               key={mode}
@@ -317,7 +317,7 @@ export const useProfileSettings = (roleType = 'customer') => {
               <Text style={[
                 modalStyles.optionText,
                 { 
-                  color: themeMode === mode ? theme.colors.primary : theme.colors.text.primary,
+                  color: themeMode === mode ? theme.colors.primary : theme.colors.onSurface,
                   fontWeight: themeMode === mode ? 'bold' : 'normal' 
                 }
               ]}>
@@ -329,7 +329,7 @@ export const useProfileSettings = (roleType = 'customer') => {
             onPress={() => setThemeModalVisible(false)} 
             style={modalStyles.cancelButton}
           >
-            <Text style={[modalStyles.cancelText, { color: theme.colors.text.secondary }]}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
           </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -349,7 +349,7 @@ export const useProfileSettings = (roleType = 'customer') => {
           onPress={(e) => e.stopPropagation()}
         >
           <View style={[modalStyles.modalContent, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[modalStyles.modalTitle, { color: theme.colors.text.primary }]}>Choose Language</Text>
+          <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose Language</Text>
           {[{ code: 'en', label: 'English' }, { code: 'am', label: 'አማርኛ (Amharic)' }].map(opt => (
             <TouchableOpacity
               key={opt.code}
@@ -362,7 +362,7 @@ export const useProfileSettings = (roleType = 'customer') => {
               <Text style={[
                 modalStyles.optionText,
                 { 
-                  color: language === opt.code ? theme.colors.primary : theme.colors.text.primary,
+                  color: language === opt.code ? theme.colors.primary : theme.colors.onSurface,
                   fontWeight: language === opt.code ? 'bold' : 'normal' 
                 }
               ]}>
@@ -374,7 +374,7 @@ export const useProfileSettings = (roleType = 'customer') => {
             onPress={() => setLangModalVisible(false)} 
             style={modalStyles.cancelButton}
           >
-            <Text style={[modalStyles.cancelText, { color: theme.colors.text.secondary }]}>Cancel</Text>
+            <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
           </TouchableOpacity>
           </View>
         </TouchableOpacity>
