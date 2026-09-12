@@ -12,8 +12,8 @@ import React, { useState, useEffect, useCallback } from 'react';import {
 import { useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
-import { useNotifications } from '@adera/auth/src/hooks';
 import useCartStore from '../store/cartStore';
+import NotificationBell from '../components/NotificationBell';
 
 const CATEGORIES = ['All', 'Food', 'Fashion', 'Crafts', 'Electronics', 'Household'];
 
@@ -26,7 +26,6 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
   const [loading, setLoading] = useState(true);
   const cartItems = useCartStore((s) => s.items);
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
-  const { unreadCount } = useNotifications();
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -142,15 +141,7 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
       <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
         <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Adera Shop</Text>
         <View style={styles.headerActions}>
-          {/* Notification bell */}
-          <TouchableOpacity style={styles.headerBtn} onPress={() => {}}>
-            <MaterialCommunityIcons name="bell-outline" size={24} color={theme.colors.text.primary} />
-            {unreadCount > 0 && (
-              <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <NotificationBell size={22} color={theme.colors.text.primary} />
           <TouchableOpacity style={styles.headerBtn} onPress={() => navigation?.navigate?.('cart')}>
             <MaterialCommunityIcons name="cart-outline" size={24} color={theme.colors.text.primary} />
             {cartCount > 0 && (
@@ -265,12 +256,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   cartBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  notifBadge: {
-    position: 'absolute', top: 2, right: 2,
-    backgroundColor: '#F44336', borderRadius: 10, minWidth: 18, height: 18,
-    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
-  },
-  notifBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   searchContainer: { paddingHorizontal: 16, paddingVertical: 10 },
   searchWrapper: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 0 },

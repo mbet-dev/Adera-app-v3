@@ -14,6 +14,7 @@ import {
 import { SafeArea, Card, Button, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Haptic + sound feedback for real-time updates
 let Haptics = null;
@@ -95,6 +96,27 @@ const TrackParcel = ({ navigation, route }) => {
     }
   }, [route?.params?.trackingId]);
 
+  // ── Offline cache helpers ──
+  const saveParcelCache = useCallback(async (pId, pTrackingId, pData, eData) => {
+    try {
+      await AsyncStorage.setItem(`@adera_parcel_${pTrackingId}`, JSON.stringify({ data: pData, ts: Date.now() }));
+      await AsyncStorage.setItem(`@adera_events_${pTrackingId}`, JSON.stringify({ data: eData, ts: Date.now() }));
+    } catch {}
+  }, []);
+
+  const loadParcelCache = useCallback(async (tid) => {
+    try {
+      const parcelJson = await AsyncStorage.getItem(`@adera_parcel_${tid}`);
+      const eventsJson = await AsyncStorage.getItem(`@adera_events_${tid}`);
+      if (!parcelJson) return null;
+      const parcel = JSON.parse(parcelJson);
+      const events = eventsJson ? JSON.parse(eventsJson) : { data: [] };
+      // Cache valid for 1 hour
+      if (Date.now() - parcel.ts > 3600000) return null;
+      return { parcelData: parcel.data, events: events.data };
+    } catch { return null; }
+  }, []);
+
   const fetchParcel = useCallback(async (code) => {
     setIsLoading(true);
     setError('');
@@ -106,9 +128,9 @@ const TrackParcel = ({ navigation, route }) => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    try {
-      const normalizedCode = code.trim().toUpperCase();
+    const normalizedCode = code.trim().toUpperCase();
 
+    try {
       // Fetch parcel from Supabase
       const { data: parcel, error: parcelError } = await supabase
         .from('parcels')
@@ -125,13 +147,22 @@ const TrackParcel = ({ navigation, route }) => {
       if (controller.signal.aborted) return;
 
       if (parcelError || !parcel) {
-        setEmpty(true);
+        // Network failed — try offline cache
+        const cached = await loadParcelCache(normalizedCode);
+        if (cached) {
+          setParcelData(cached.parcelData);
+          setParcelEvents(cached.events);
+          setLastUpdate(new Date());
+          setEmpty(false);
+        } else {
+          setEmpty(true);
+        }
         setIsLoading(false);
         return;
       }
 
       // Fetch parcel events (timeline)
-      const { data: events, error: eventsError } = await supabase
+      const { data: events } = await supabase
         .from('parcel_events')
         .select('id, status, actor_id, actor_role, location, address, notes, event_time, created_at')
         .eq('parcel_id', parcel.id)
@@ -139,7 +170,7 @@ const TrackParcel = ({ navigation, route }) => {
 
       if (controller.signal.aborted) return;
 
-      setParcelData({
+      const mappedParcel = {
         id: parcel.id,
         trackingId: parcel.tracking_id,
         currentStatus: parcel.status,
@@ -156,18 +187,33 @@ const TrackParcel = ({ navigation, route }) => {
         urgent: parcel.urgent,
         description: parcel.description,
         createdAt: parcel.created_at,
-      });
+      };
 
-      setParcelEvents(events || []);
+      const mappedEvents = events || [];
+
+      setParcelData(mappedParcel);
+      setParcelEvents(mappedEvents);
       setLastUpdate(new Date());
       setEmpty(false);
+
+      // Cache for offline access
+      saveParcelCache(parcel.id, parcel.tracking_id, mappedParcel, mappedEvents);
     } catch (e) {
       if (e?.name === 'AbortError' || controller?.signal?.aborted) return;
-      setError('Failed to fetch tracking information. Please try again.');
+      // Last resort: try cache
+      const cached = await loadParcelCache(normalizedCode);
+      if (cached) {
+        setParcelData(cached.parcelData);
+        setParcelEvents(cached.events);
+        setLastUpdate(new Date());
+        setEmpty(false);
+      } else {
+        setError('Failed to fetch tracking information. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [saveParcelCache, loadParcelCache]);
 
   // ─── Real-time subscription ───
   useEffect(() => {

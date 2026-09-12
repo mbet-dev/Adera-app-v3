@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import useCartStore from '../store/cartStore';
 import useReviews from '../hooks/useReviews';
+import useOfflineCache from '../hooks/useOfflineCache';
 import WriteReviewModal from '../components/WriteReviewModal';
 
 const { width } = Dimensions.get('window');
@@ -43,33 +44,41 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
   const inCartCount = cartItems.find((i) => i.id === productId)?.quantity || 0;
+  const { fetchProductWithCache } = useOfflineCache();
 
   const { reviews, summary: reviewSummary, userReview, submitting: reviewSubmitting, submitReview } = useReviews(productId);
 
   const fetchProduct = useCallback(async () => {
     if (!productId) { setLoading(false); return; }
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          shops (
-            id, name, description, category, logo_url, address, phone,
-            average_rating, total_reviews, is_verified
-          )
-        `)
-        .eq('id', productId)
-        .single();
-      if (error) throw error;
-      setProduct(data);
-      setShop(data?.shops || null);
+      const { data, isFromCache } = await fetchProductWithCache(productId, async (id) => {
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            *,
+            shops (
+              id, name, description, category, logo_url, address, phone,
+              average_rating, total_reviews, is_verified
+            )
+          `)
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+        return data;
+      });
+      if (data) {
+        setProduct(data);
+        setShop(data?.shops || null);
+      } else {
+        Alert.alert('Error', 'Failed to load product details.');
+      }
     } catch (err) {
       console.error('[ProductDetail] Error:', err);
       Alert.alert('Error', 'Failed to load product details.');
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, fetchProductWithCache]);
 
   useEffect(() => { fetchProduct(); }, [fetchProduct]);
 
