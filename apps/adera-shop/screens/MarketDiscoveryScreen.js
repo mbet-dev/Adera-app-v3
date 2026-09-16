@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';import {
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
   View,
   Text,
   StyleSheet,
@@ -8,6 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';import {
   ScrollView,
   ActivityIndicator,
   TextInput as RNTextInput,
+  Platform,
 } from 'react-native';
 import { useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,32 +19,108 @@ import NotificationBell from '../components/NotificationBell';
 
 const CATEGORIES = ['All', 'Food', 'Fashion', 'Crafts', 'Electronics', 'Household'];
 
+const SORT_OPTIONS = [
+  { key: 'newest', label: 'Newest', icon: 'clock-outline' },
+  { key: 'price_asc', label: 'Price ↑', icon: 'sort-ascending' },
+  { key: 'price_desc', label: 'Price ↓', icon: 'sort-descending' },
+  { key: 'featured', label: 'Featured', icon: 'star' },
+  { key: 'name', label: 'A–Z', icon: 'alphabetical' },
+];
+
 const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
   const theme = useTheme();
   const isDark = theme.isDark;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
+  const searchTimerRef = useRef(null);
+  const requestIdRef = useRef(0);
   const cartItems = useCartStore((s) => s.items);
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
 
-  const fetchProducts = useCallback(async () => {
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
+
+  /**
+   * Build and execute a Supabase query with optional FTS, category, and sort.
+   *
+   * When `searchTerm` is provided we use Supabase full-text search via `.textSearch()`
+   * on a pre-built GIN index (`products_search`), falling back to ILIKE on the server
+   * side when FTS is unavailable.
+   */
+  const fetchProducts = useCallback(async (searchTerm = '', category = 'All', sort = 'newest') => {
+    const thisRequestId = ++requestIdRef.current;
     try {
       setLoading(true);
-      const { data, error } = await supabase
+
+      let query = supabase
         .from('products')
         .select(`
           id, name, price, original_price, category, images, stock_quantity,
-          is_available, is_featured, shop_id,
+          is_available, is_featured, shop_id, created_at,
           shops (name, is_verified)
         `)
-        .eq('is_available', true)
-        .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false });
+        .eq('is_available', true);
+
+      // --- Full-text search via Supabase RPC or textSearch ---
+      if (searchTerm && searchTerm.trim().length > 0) {
+        const trimmed = searchTerm.trim();
+        // Try the generated-column FTS approach first. If the column
+        // `search_vector` exists and has a GIN index this will be fast.
+        // Fall back to server-side ILIKE which still avoids transferring
+        // every row to the client.
+        try {
+          query = query.textSearch('search_vector', trimmed, {
+            type: 'websearch',
+            config: 'english',
+          });
+        } catch {
+          // FTS column may not exist yet — fall back to ILIKE
+          query = query.or(`name.ilike.%${trimmed}%,description.ilike.%${trimmed}%`);
+        }
+      }
+
+      // --- Category filter ---
+      if (category && category !== 'All') {
+        query = query.eq('category', category);
+      }
+
+      // --- Sort ---
+      switch (sort) {
+        case 'price_asc':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_desc':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'name':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'featured':
+          query = query
+            .order('is_featured', { ascending: false })
+            .order('created_at', { ascending: false });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+
+      const { data, error } = await query;
+
+      // Ignore stale responses — a newer request has already been dispatched
+      if (thisRequestId !== requestIdRef.current) return;
 
       if (error) {
-        console.error('Error fetching products:', error);
+        console.error('[MarketDiscovery] Error fetching products:', error);
       } else {
         setProducts(
           (data || []).map((item) => ({
@@ -61,23 +139,38 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
         );
       }
     } catch (e) {
-      console.error('Exception fetching products:', e);
+      console.error('[MarketDiscovery] Exception fetching products:', e);
     } finally {
       setLoading(false);
+      setSearching(false);
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
-    fetchProducts();
+    fetchProducts('', 'All', 'newest');
   }, [fetchProducts]);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.shop.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Re-fetch whenever category or sort changes
+  useEffect(() => {
+    fetchProducts(searchQuery, selectedCategory, sortBy);
+  }, [selectedCategory, sortBy]);
+
+  // Debounced search
+  const handleSearchChange = useCallback((text) => {
+    setSearchQuery(text);
+    setSearching(true);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      fetchProducts(text, selectedCategory, sortBy);
+    }, 400);
+  }, [fetchProducts, selectedCategory, sortBy]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    fetchProducts('', selectedCategory, sortBy);
+  }, [fetchProducts, selectedCategory, sortBy]);
 
   const renderProduct = ({ item }) => {
     const hasDiscount = item.originalPrice && item.originalPrice > item.price;
@@ -119,14 +212,14 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
             )}
           </View>
           <Text style={[styles.stockText, { color: item.stock > 0 ? '#4CAF50' : '#F44336' }]}>
-            {item.stock > 0 ? `In stock` : 'Out of stock'}
+            {item.stock > 0 ? 'In stock' : 'Out of stock'}
           </Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  if (loading) {
+  if (loading && products.length === 0) {
     return (
       <View style={[styles.container, styles.center, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -167,11 +260,12 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
             placeholder="Search products, shops…"
             placeholderTextColor={theme.colors.text.secondary}
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={handleSearchChange}
             autoCorrect={false}
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+          {searching && <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginLeft: 4 }} />}
+          {searchQuery.length > 0 && !searching && (
+            <TouchableOpacity onPress={clearSearch}>
               <MaterialCommunityIcons name="close-circle" size={18} color={theme.colors.text.secondary} />
             </TouchableOpacity>
           )}
@@ -209,9 +303,48 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
         </ScrollView>
       </View>
 
+      {/* Sort Bar */}
+      <View style={[styles.sortContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortScroll}>
+          {SORT_OPTIONS.map((opt) => {
+            const isActive = sortBy === opt.key;
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                style={[
+                  styles.sortChip,
+                  {
+                    backgroundColor: isActive ? theme.colors.primaryContainer : 'transparent',
+                    borderColor: isActive ? theme.colors.primary : theme.colors.outlineVariant,
+                  },
+                ]}
+                onPress={() => setSortBy(opt.key)}
+              >
+                <MaterialCommunityIcons
+                  name={opt.icon}
+                  size={14}
+                  color={isActive ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant}
+                />
+                <Text
+                  style={[
+                    styles.sortChipText,
+                    { color: isActive ? theme.colors.onPrimaryContainer : theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        <Text style={[styles.resultCount, { color: theme.colors.text.secondary }]}>
+          {products.length} result{products.length !== 1 ? 's' : ''}
+        </Text>
+      </View>
+
       {/* Product Grid */}
       <FlatList
-        data={filteredProducts}
+        data={products}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id}
         numColumns={2}
@@ -222,6 +355,11 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="package-variant" size={48} color={theme.colors.text.secondary} />
             <Text style={[styles.emptyText, { color: theme.colors.text.secondary }]}>No products found</Text>
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={clearSearch}>
+                <Text style={[styles.clearSearchLink, { color: theme.colors.primary }]}>Clear search</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
@@ -257,7 +395,15 @@ const styles = StyleSheet.create({
   },
   cartBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   searchContainer: { paddingHorizontal: 16, paddingVertical: 10 },
-  searchWrapper: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1 },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 0 },
   categoriesContainer: { paddingBottom: 8 },
   categoriesScroll: { paddingHorizontal: 16, gap: 8 },
@@ -268,6 +414,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   categoryText: { fontSize: 13, fontWeight: '600' },
+  sortContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
+  sortScroll: { flex: 1, gap: 8 },
+  sortChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  sortChipText: { fontSize: 12, fontWeight: '600' },
+  resultCount: { fontSize: 11, marginLeft: 8 },
   listContent: { padding: 12 },
   columnWrapper: { justifyContent: 'space-between' },
   productCard: {
@@ -309,6 +474,7 @@ const styles = StyleSheet.create({
   stockText: { fontSize: 11, fontWeight: '500' },
   emptyState: { alignItems: 'center', padding: 40, gap: 8 },
   emptyText: { fontSize: 14 },
+  clearSearchLink: { fontSize: 14, fontWeight: '600', marginTop: 4 },
 });
 
 export default MarketDiscoveryScreen;

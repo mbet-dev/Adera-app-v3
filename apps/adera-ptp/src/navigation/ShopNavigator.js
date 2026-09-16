@@ -3,6 +3,7 @@ import { Platform, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@adera/ui';
 import { AppBottomNavigation } from '@adera/ui';
+import useCartStore from '../../../adera-shop/store/cartStore';
 
 // Import Shop screens — all self-contained, no PTP screens
 import MarketDiscoveryScreen from '../../../adera-shop/screens/MarketDiscoveryScreen';
@@ -19,9 +20,11 @@ const ShopStack = createNativeStackNavigator();
  */
 function ShopTabs({ navigation }) {
   const theme = useTheme();
+  const cartItems = useCartStore((s) => s.items);
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const routes = [
     { key: 'browse', title: 'Browse', focusedIcon: 'storefront', unfocusedIcon: 'storefront-outline' },
-    { key: 'cart', title: 'Cart', focusedIcon: 'cart', unfocusedIcon: 'cart-outline' },
+    { key: 'cart', title: 'Cart', focusedIcon: 'cart', unfocusedIcon: 'cart-outline', badge: cartCount > 0 ? cartCount : undefined },
     { key: 'orders', title: 'Orders', focusedIcon: 'receipt', unfocusedIcon: 'receipt-outline' },
     { key: 'profile', title: 'Profile', focusedIcon: 'account', unfocusedIcon: 'account-outline' },
   ];

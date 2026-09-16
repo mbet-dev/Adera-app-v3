@@ -33,7 +33,12 @@ function AppContent() {
     setGuestMode(false);
     if (appType === 'shop') {
       setShowAppSelector(false);
-      setShowShopGateway(true);
+      // Authenticated users skip the gateway
+      if (isAuthenticated) {
+        setShowShopGateway(false);
+      } else {
+        setShowShopGateway(true);
+      }
     } else {
       setShowAppSelector(false);
       setShowShopGateway(false);
@@ -92,21 +97,34 @@ function AppContent() {
   }
 
   if (isAuthenticated) {
+    // Show app selector for authenticated users switching apps
+    if (showAppSelector) {
+      return (
+        <AppFlowProvider value={{ openAppSelector }}>
+          <AppSelectorScreen onAppSelect={handleAppSelect} />
+        </AppFlowProvider>
+      );
+    }
+
     if (role === null) {
       return <LoadingScreen message="Loading user profile..." />;
     }
     // Route to the appropriate navigator based on which app was selected
     if (selectedApp === 'shop') {
       return (
-        <ErrorBoundary fallbackMessage="The Shop encountered an error. Please restart.">
-          <ShopNavigator />
-        </ErrorBoundary>
+        <AppFlowProvider value={{ openAppSelector }}>
+          <ErrorBoundary fallbackMessage="The Shop encountered an error. Please restart.">
+            <ShopNavigator />
+          </ErrorBoundary>
+        </AppFlowProvider>
       );
     }
     return (
-      <ErrorBoundary fallbackMessage="The app encountered an error. Please restart.">
-        <AppNavigator />
-      </ErrorBoundary>
+      <AppFlowProvider value={{ openAppSelector }}>
+        <ErrorBoundary fallbackMessage="The app encountered an error. Please restart.">
+          <AppNavigator />
+        </ErrorBoundary>
+      </AppFlowProvider>
     );
   }
 

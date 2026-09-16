@@ -9,16 +9,18 @@ import {
   Image,
   RefreshControl,
 } from 'react-native';
-import { SafeArea, Card, Button, useTheme } from '@adera/ui';
+import { SafeArea, Card, Button, useTheme, AppSwitcherButton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@adera/auth';
 import { supabase } from '@adera/auth/src/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppFlow } from '../../context/AppFlowContext';
 
 const ShopProfile = ({ navigation }) => {
   const theme = useTheme();
   const isDark = theme.isDark;
   const { user, userProfile, signOut } = useAuth();
+  const { openAppSelector } = useAppFlow();
   const [refreshing, setRefreshing] = useState(false);
   const [orderStats, setOrderStats] = useState({ total: 0, delivered: 0, totalSpent: 0 });
   const [recentOrders, setRecentOrders] = useState([]);
@@ -151,6 +153,12 @@ const ShopProfile = ({ navigation }) => {
             </Card>
           ))}
         </View>
+
+        {/* App Switcher */}
+        <AppSwitcherButton
+          targetApp="ptp"
+          onPress={openAppSelector}
+        />
 
         {/* Menu Items */}
         <View style={styles.menuSection}>

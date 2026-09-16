@@ -50,6 +50,11 @@ const getResponsiveConfig = (width) => {
   }
 };
 
+// Total bar height including safe area insets
+const getTotalBarHeight = (barHeight, bottomInset) => {
+  return barHeight + (bottomInset || 0);
+};
+
 const AppBottomNavigation = ({ navigationState, onIndexChange, renderScene, renderFab, ...props }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -342,10 +347,13 @@ const AppBottomNavigation = ({ navigationState, onIndexChange, renderScene, rend
     };
   }, []);
 
-  // Calculate bottom margin for scene container based on responsive config
-  const sceneBottomMargin = Platform.OS === 'web' 
-    ? responsiveConfig.barHeight + (insets.bottom || 0)
-    : 0;
+  // Calculate total bar height including safe area insets for proper scene spacing
+  const totalBarHeight = getTotalBarHeight(responsiveConfig.barHeight, insets.bottom);
+  
+  // Calculate bottom margin for scene container to prevent overlap with the fixed bar
+  // On web: always account for bar height + safe area insets
+  // On native: rely on safe area insets handled by the navigation container
+  const sceneBottomMargin = Platform.OS === 'web' ? totalBarHeight : insets.bottom || 0;
 
   // Add class name to container for CSS targeting (web only)
   useEffect(() => {
@@ -388,8 +396,13 @@ const AppBottomNavigation = ({ navigationState, onIndexChange, renderScene, rend
           styles.bar,
           {
             backgroundColor: theme.colors.surface,
-            borderTopColor: theme.colors.outline,
+            borderTopColor: theme.colors.outlineVariant || theme.colors.outline,
             height: Platform.OS === 'web' ? responsiveConfig.barHeight : undefined,
+            elevation: 8,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
           },
           Platform.OS === 'web' && styles.barWeb,
         ]}
@@ -399,9 +412,9 @@ const AppBottomNavigation = ({ navigationState, onIndexChange, renderScene, rend
             marginBottom: sceneBottomMargin,
           },
         ]}
+        labeled={responsiveConfig.labelVisible}
         activeColor={theme.colors.primary}
         inactiveColor={theme.colors.onSurfaceVariant}
-        labeled={!responsiveConfig.compact || windowDimensions.width >= BREAKPOINTS.mobile}
         {...props}
       />
       {renderFab && (
