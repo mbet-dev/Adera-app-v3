@@ -637,7 +637,7 @@ const TrackParcel = ({ navigation, route }) => {
   };
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={styles.scrollContent}
@@ -652,7 +652,7 @@ const TrackParcel = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 16 },
   searchSection: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
   searchCard: { padding: 20 },
   searchTitle: { fontSize: 24, fontWeight: '700', marginBottom: 8 },

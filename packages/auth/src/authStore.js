@@ -195,7 +195,15 @@ export const useAuthStore = create(
             throw error;
           }
           
-          // Success - onAuthStateChange will handle the rest
+          // Success - update last_login_at and let onAuthStateChange handle the rest
+          try {
+            await supabase
+              .from('users')
+              .update({ last_login_at: new Date().toISOString() })
+              .eq('id', data.user.id);
+          } catch (e) {
+            console.warn('[AuthStore] Failed to update last_login_at:', e.message);
+          }
           get().addNotification('✅ Signed in successfully!', NOTIFICATION_TYPES.SUCCESS);
           return { success: true, data };
         } catch (error) {
@@ -410,7 +418,7 @@ export const useAuthStore = create(
         userProfile: state.userProfile,
         profileFetchTimestamp: state.profileFetchTimestamp, // Persist timestamp to prevent immediate refetch on app restart
       }),
-      version: 4, // Increment version due to storage change and state structure
+      version: 5, // v5: consolidated users table, last_login_at tracking
     }
   )
 );

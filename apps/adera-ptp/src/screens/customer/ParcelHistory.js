@@ -265,7 +265,7 @@ const ParcelHistory = ({ navigation }) => {
   );
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <SectionList
           sections={sections}
@@ -293,7 +293,7 @@ const ParcelHistory = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { paddingBottom: 120 },
+  listContent: { paddingBottom: 16 },
   listHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 20 },
   heroContainer: { flexDirection: 'row', gap: 16 },
   heroCopy: { flex: 1, gap: 6 },

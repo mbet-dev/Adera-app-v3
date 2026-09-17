@@ -100,7 +100,7 @@ const ShopProfile = ({ navigation }) => {
   ];
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={styles.content}
@@ -194,7 +194,7 @@ const ShopProfile = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 120, gap: 20 },
+  content: { padding: 20, paddingBottom: 16, gap: 20 },
   profileCard: { padding: 20 },
   profileHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   avatar: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },

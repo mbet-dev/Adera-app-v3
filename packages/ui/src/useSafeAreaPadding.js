@@ -11,19 +11,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const useSafeAreaPadding = () => {
   const insets = useSafeAreaInsets();
   
-  // Base buffer padding for different platforms
+  // Light buffer padding — SafeAreaView already handles the core insets
+  // Only add a small buffer to prevent content touching edges
   const bufferPadding = {
-    top: Platform.OS === 'ios' ? 10 : 15,
-    bottom: Platform.OS === 'ios' ? 25 : 35, // More aggressive on Android
-    left: 10,
-    right: 10,
+    top: 4,
+    bottom: 4,
+    left: 4,
+    right: 4,
   };
   
   return {
-    paddingTop: Math.max(insets.top, 20) + bufferPadding.top,
-    paddingBottom: Math.max(insets.bottom, 20) + bufferPadding.bottom,
-    paddingLeft: Math.max(insets.left, 0) + bufferPadding.left,
-    paddingRight: Math.max(insets.right, 0) + bufferPadding.right,
+    paddingTop: insets.top + bufferPadding.top,
+    paddingBottom: insets.bottom + bufferPadding.bottom,
+    paddingLeft: insets.left + bufferPadding.left,
+    paddingRight: insets.right + bufferPadding.right,
   };
 };
 
@@ -34,11 +35,8 @@ export const useSafeAreaPadding = () => {
 export const useSafeBottomPadding = () => {
   const insets = useSafeAreaInsets();
   
-  // Minimum 40px bottom padding, plus safe area, plus 20px buffer
-  const minBottomPadding = 40;
-  const bufferPadding = Platform.OS === 'ios' ? 20 : 30;
-  
-  return Math.max(insets.bottom + bufferPadding, minBottomPadding);
+  // Bottom safe area inset + small buffer for comfortable scrolling
+  return insets.bottom + 16;
 };
 
 export default useSafeAreaPadding;

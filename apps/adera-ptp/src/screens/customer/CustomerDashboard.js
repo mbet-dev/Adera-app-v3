@@ -132,7 +132,7 @@ const CustomerDashboard = () => {
     : 'Adera Explorer';
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={styles.content}
@@ -301,7 +301,7 @@ const CustomerDashboard = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingBottom: 120, paddingHorizontal: 20, gap: 24 },
+  content: { paddingBottom: 16, paddingHorizontal: 20, gap: 24 },
   headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 8 },
   greeting: { fontSize: 18, fontWeight: '700' },
   greetingSub: { fontSize: 13, marginTop: 2 },

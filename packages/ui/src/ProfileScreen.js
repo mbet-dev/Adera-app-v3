@@ -188,7 +188,7 @@ const ProfileScreen = ({ user, menuItems, appVersion = 'v1.0.0' }) => {
   };
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={styles.scrollContent}
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: 20,
