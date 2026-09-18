@@ -1,6 +1,6 @@
 # Development Plan
 
-## Phase 1: Architecture Stabilization ← CURRENT
+## Phase 1: Architecture Stabilization ← COMPLETE
 **Objective**: Fix crashes, clean architecture, stabilize foundation
 - Fix broken package imports ✅
 - Consolidate user tables ✅
@@ -9,15 +9,14 @@
 - Create memory bank ✅
 - Verify build ⬜
 
-## Phase 2: Core Infrastructure
+## Phase 2: Core Infrastructure ← COMPLETE
 **Objective**: Fill infrastructure gaps
-- Set up Supabase Storage buckets (avatars, products, parcels, shops)
-- Add TypeScript configuration to shared packages
-- Wire up `@adera/localization` with PreferencesProvider
-- Complete `@adera/maps` integration in PTP app
-- Implement wallet table in database
+- ✅ Set up Supabase Storage buckets (avatars, products, parcels, shops) with RLS
+- ✅ Wire up `@adera/localization` with PreferencesProvider (controlled mode)
+- ✅ Complete `@adera/maps` integration — LocationService.js created
+- ✅ Implement wallet system (wallets + wallet_transactions tables + functions)
 
-## Phase 3: Payment Flow Integration
+## Phase 3: Payment Flow Integration ← CURRENT
 **Objective**: Wire Chapa into actual user flows
 - Integrate Chapa checkout into CreateParcel payment step
 - Integrate Chapa checkout into Shop checkout

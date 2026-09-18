@@ -7,12 +7,19 @@ import * as Linking from 'expo-linking';
 import { ThemeProvider, OnboardingScreen, AppSelectorScreen, LoadingScreen, MarketDiscoveryScreen, GatewayScreen, ErrorBoundary } from '@adera/ui';
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import { I18nProvider } from '@adera/localization';
 import AppNavigator from './src/navigation/AppNavigator';
 import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { AppFlowProvider } from './src/context/AppFlowContext';
 import ThemelessLoadingScreen from './src/ThemelessLoadingScreen';
 import Constants from 'expo-constants';
+
+function I18nSync({ children }) {
+  const { language } = usePreferences();
+  // Pass language as controlled prop so I18nProvider stays in sync with PreferencesProvider
+  return <I18nProvider language={language || 'en'}>{children}</I18nProvider>;
+}
 
 function AppContent() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
@@ -196,7 +203,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PreferencesProvider>
-        <AppWithTheme />
+        <I18nSync>
+          <AppWithTheme />
+        </I18nSync>
       </PreferencesProvider>
     </SafeAreaProvider>
   );

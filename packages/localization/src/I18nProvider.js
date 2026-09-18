@@ -4,8 +4,18 @@ import { LanguageCode, LANGUAGE_LABELS } from './types';
 
 const I18nContext = createContext(null);
 
-export const I18nProvider = ({ children, defaultLanguage = LanguageCode.ENGLISH }) => {
-  const [language, setLanguage] = useState(defaultLanguage);
+export const I18nProvider = ({ children, defaultLanguage = LanguageCode.ENGLISH, language: controlledLanguage }) => {
+  const [internalLanguage, setInternalLanguage] = useState(defaultLanguage);
+  const language = controlledLanguage || internalLanguage;
+  const setLanguage = useCallback((code) => {
+    if (controlledLanguage !== undefined) {
+      // In controlled mode, the parent manages language
+      // The I18nProvider's setLanguage becomes a no-op; use PreferencesProvider.setLanguage instead
+      console.warn('[I18nProvider] In controlled mode, use PreferencesProvider.setLanguage to change language');
+    } else {
+      setInternalLanguage(code);
+    }
+  }, [controlledLanguage]);
 
   /**
    * Translate a key into the current language.

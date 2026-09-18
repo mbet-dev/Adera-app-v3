@@ -1,12 +1,12 @@
 # Development Status
 
 **Last Updated**: 2026-09-16  
-**Current Phase**: Phase 1 — Architecture Stabilization  
+**Current Phase**: Phase 2 — Core Infrastructure  
 **Branch**: dev  
 
 ## Phase 1 Benchmark (IN PROGRESS)
 
-### ✅ Completed
+### ✅ Phase 1 Complete
 - [x] Broken package imports fixed (payments, localization, utils)
 - [x] Database schema consolidated — `users` table replaces both `users` and `profiles`
 - [x] Duplicate SQL type definitions removed
@@ -17,13 +17,17 @@
 - [x] i18n framework created with English + Amharic strings
 - [x] Utils package populated (QR generator, formatters, validators, tracking utils)
 - [x] Memory bank created at project root
+- [x] Build verified (1158 modules, zero errors)
 
-### ⬜ In Progress
-- [ ] Build verification (web platform)
-- [ ] Memory bank finalization
+### ✅ Phase 2 Complete
+- [x] Supabase Storage buckets (avatars, products, parcels, shops) with RLS policies
+- [x] Wallet system (wallets + wallet_transactions tables, credit/debit functions)
+- [x] LocationService.js — cross-platform location, geocoding, distance calc, watch
+- [x] I18nProvider wired with PreferencesProvider (controlled language mode)
+- [x] @adera/maps index exports LocationService functions
+- [x] Build verified after all changes
 
 ### ⬜ Not Started
-- [ ] Phase 2: Core infrastructure (Supabase Storage, TypeScript config)
 - [ ] Phase 3: Payment flow wiring (Chapa → CreateParcel, Shop checkout)
 - [ ] Phase 4: Test infrastructure (Jest)
 - [ ] Phase 5: Push notifications
