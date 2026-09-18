@@ -5,7 +5,7 @@ import { usePreferences } from '@adera/preferences';
 import { useTheme } from '../ThemeProvider';
 
 export const useProfileSettings = (roleType = 'customer') => {
-  const { user: authUser, signOut } = useAuth();
+  const { userProfile: authUser, signOut } = useAuth();
   const theme = useTheme();
   const { 
     themeMode, 
@@ -384,7 +384,7 @@ export const useProfileSettings = (roleType = 'customer') => {
   
   return {
     user: {
-      name: authUser?.user_metadata?.full_name || `Adera ${roleType.charAt(0).toUpperCase() + roleType.slice(1)}`,
+      name: authUser?.full_name || authUser?.user_metadata?.full_name || `Adera ${roleType.charAt(0).toUpperCase() + roleType.slice(1)}`,
       email: authUser?.email,
       stats: getRoleSpecificStats(),
     },

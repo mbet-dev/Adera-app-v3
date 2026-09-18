@@ -274,9 +274,6 @@ const SignUpScreen = ({ navigation }) => {
                     autoComplete="email"
                     textContentType="emailAddress"
                   />
-                  {touched.email && errors.email && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.email}</Text>
-                  )}
 
                   <TextInput
                     label="Phone Number"
@@ -289,9 +286,6 @@ const SignUpScreen = ({ navigation }) => {
                     autoComplete="tel"
                     textContentType="telephoneNumber"
                   />
-                  {touched.phone && errors.phone && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.phone}</Text>
-                  )}
 
                   <TextInput
                     label="Password"
@@ -317,9 +311,6 @@ const SignUpScreen = ({ navigation }) => {
                       </TouchableOpacity>
                     }
                   />
-                  {touched.password && errors.password && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.password}</Text>
-                  )}
 
                   <TextInput
                     label="Confirm Password"
@@ -344,9 +335,6 @@ const SignUpScreen = ({ navigation }) => {
                       </TouchableOpacity>
                     }
                   />
-                  {touched.confirmPassword && errors.confirmPassword && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.confirmPassword}</Text>
-                  )}
 
                   <Button
                     title="Create Account"

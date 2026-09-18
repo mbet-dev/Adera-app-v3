@@ -249,9 +249,6 @@ const LoginScreen = ({ navigation }) => {
                     autoComplete="email"
                     textContentType="emailAddress"
                   />
-                  {touched.email && errors.email && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.email}</Text>
-                  )}
                   <TextInput
                     label="Password"
                     value={values.password}
@@ -263,9 +260,6 @@ const LoginScreen = ({ navigation }) => {
                     autoComplete="password"
                     textContentType="password"
                   />
-                  {touched.password && errors.password && (
-                    <Text style={[styles.errorText, { color: theme.colors.error }]}>{errors.password}</Text>
-                  )}
                   <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
                     <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>Forgot Password?</Text>
                   </TouchableOpacity>
