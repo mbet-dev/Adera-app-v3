@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,10 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { supabase } from '@adera/auth/src/supabase';
 import useCartStore from '../store/cartStore';
-import AddressPicker from '../components/AddressPicker';
-
-const DELIVERY_FEE = 150;
 
 const ShoppingCartScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -27,105 +22,27 @@ const ShoppingCartScreen = ({ navigation }) => {
   const clearCart = useCartStore((s) => s.clearCart);
   const getTotalAmount = useCartStore((s) => s.getTotalAmount);
 
-  const [placing, setPlacing] = useState(false);
-  const [showAddressPicker, setShowAddressPicker] = useState(false);
-  const [deliveryAddress, setDeliveryAddress] = useState(null);
-
   const subtotal = useMemo(() => getTotalAmount(), [items, getTotalAmount]);
-  const total = subtotal + (items.length > 0 ? DELIVERY_FEE : 0);
 
-  const handleAddressSelect = (addr) => {
-    setDeliveryAddress(addr);
-  };
-
-  const handlePlaceOrder = useCallback(async () => {
+  const handlePlaceOrder = useCallback(() => {
     if (items.length === 0) {
       Alert.alert('Empty Cart', 'Add some items to your cart first.');
       return;
     }
 
-    if (!deliveryAddress) {
-      setShowAddressPicker(true);
-      return;
-    }
-
-    try {
-      setPlacing(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        Alert.alert('Sign In Required', 'Please sign in to place an order.');
-        return;
-      }
-
-      // Group items by shop
-      const shopGroups = {};
-      items.forEach((item) => {
-        if (!shopGroups[item.shopId]) shopGroups[item.shopId] = [];
-        shopGroups[item.shopId].push(item);
-      });
-
-      const shopIds = Object.keys(shopGroups);
-      let ordersCreated = 0;
-
-      for (const shopId of shopIds) {
-        const shopItems = shopGroups[shopId];
-        const shopSubtotal = shopItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-        // Build delivery location point
-        let locationPoint = 'POINT(38.7578 8.9806)';
-        if (deliveryAddress.longitude && deliveryAddress.latitude) {
-          locationPoint = `POINT(${deliveryAddress.longitude} ${deliveryAddress.latitude})`;
-        }
-
-        const { data: order, error: orderError } = await supabase
-          .from('orders')
-          .insert({
-            order_number: `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-            customer_id: user.id,
-            shop_id: shopId,
-            delivery_address: deliveryAddress.fullAddress || 'Delivery address',
-            delivery_location: locationPoint,
-            delivery_phone: deliveryAddress.phone || null,
-            delivery_notes: deliveryAddress.notes || null,
-            subtotal: shopSubtotal,
-            delivery_fee: DELIVERY_FEE / shopIds.length,
-            total_amount: shopSubtotal + DELIVERY_FEE / shopIds.length,
-            payment_method: 'cod',
-            status: 'pending',
-          })
-          .select()
-          .single();
-
-        if (orderError) throw orderError;
-
-        const orderItems = shopItems.map((item) => ({
-          order_id: order.id,
-          product_id: item.id,
-          product_name: item.name,
-          product_price: item.price,
-          quantity: item.quantity,
-          item_total: item.price * item.quantity,
-        }));
-
-        const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-        if (itemsError) throw itemsError;
-
-        ordersCreated++;
-      }
-
-      clearCart();
-      Alert.alert(
-        'Order Placed!',
-        `${ordersCreated} order${ordersCreated > 1 ? 's' : ''} placed successfully.\n\nDelivering to: ${deliveryAddress.label}`,
-        [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }],
-      );
-    } catch (err) {
-      console.error('[Cart] Order error:', err);
-      Alert.alert('Order Failed', 'Could not place order. Please try again.');
-    } finally {
-      setPlacing(false);
-    }
-  }, [items, clearCart, navigation, deliveryAddress]);
+    // Navigate to checkout screen with cart data
+    navigation?.navigate?.('checkout', {
+      cartItems: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        shop_id: item.shopId,
+        image: item.image,
+      })),
+      totalAmount: subtotal,
+    });
+  }, [items, subtotal, navigation]);
 
   const renderEmpty = () => (
     <View style={styles.emptyState}>
@@ -177,8 +94,7 @@ const ShoppingCartScreen = ({ navigation }) => {
           ])}>
             <Text style={{ color: '#F44336', fontWeight: '600', fontSize: 14 }}>Clear</Text>
           </TouchableOpacity>
-        )}
-        {items.length === 0 && <View style={{ width: 40 }} />}
+        )}            {items.length === 0 && <View style={{ width: 40 }} />}
       </View>
 
       {items.length === 0 ? (
@@ -190,85 +106,25 @@ const ShoppingCartScreen = ({ navigation }) => {
               {items.reduce((s, i) => s + i.quantity, 0)} items in cart
             </Text>
             {items.map(renderCartItem)}
-
-            {/* Delivery Address Section */}
-            <View style={[styles.addressSection, { borderTopColor: theme.colors.outlineVariant }]}>
-              <View style={styles.addressHeader}>
-                <View style={styles.addressHeaderLeft}>
-                  <MaterialCommunityIcons name="map-marker" size={20} color={theme.colors.primary} />
-                  <Text style={[styles.addressTitle, { color: theme.colors.text.primary }]}>Delivery Address</Text>
-                </View>
-                <TouchableOpacity onPress={() => setShowAddressPicker(true)}>
-                  <Text style={{ color: theme.colors.primary, fontWeight: '600', fontSize: 14 }}>
-                    {deliveryAddress ? 'Change' : 'Select'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              {deliveryAddress ? (
-                <View style={[styles.selectedAddress, { backgroundColor: theme.colors.primaryContainer }]}>
-                  <View style={[styles.addrIcon, { backgroundColor: theme.colors.primary }]}>
-                    <MaterialCommunityIcons
-                      name={deliveryAddress.label === 'Work' ? 'briefcase' : deliveryAddress.label === 'Other' ? 'map-marker' : 'home'}
-                      size={18}
-                      color="#fff"
-                    />
-                  </View>
-                  <View style={styles.addrInfo}>
-                    <Text style={[styles.addrLabel, { color: theme.colors.primary }]}>{deliveryAddress.label}</Text>
-                    <Text style={[styles.addrFull, { color: theme.colors.text.primary }]} numberOfLines={2}>
-                      {deliveryAddress.fullAddress}
-                    </Text>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.addAddressBtn, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant, borderWidth: 2, borderStyle: 'dashed' }]}
-                  onPress={() => setShowAddressPicker(true)}
-                >
-                  <MaterialCommunityIcons name="plus-circle-outline" size={24} color={theme.colors.primary} />
-                  <Text style={[styles.addAddressText, { color: theme.colors.primary }]}>Add delivery address</Text>
-                </TouchableOpacity>
-              )}
-            </View>
           </ScrollView>
 
           {/* Order Summary Footer */}
           <View style={[styles.footer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.colors.text.secondary }]}>Subtotal</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.text.secondary }]}>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</Text>
               <Text style={[styles.summaryValue, { color: theme.colors.text.primary }]}>{subtotal.toFixed(2)} ETB</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: theme.colors.text.secondary }]}>Delivery Fee</Text>
-              <Text style={[styles.summaryValue, { color: theme.colors.text.primary }]}>{DELIVERY_FEE.toFixed(2)} ETB</Text>
-            </View>
-            <View style={[styles.summaryRow, styles.totalRow, { borderTopColor: theme.colors.outlineVariant }]}>
-              <Text style={[styles.totalLabel, { color: theme.colors.text.primary }]}>Total</Text>
-              <Text style={[styles.totalValue, { color: theme.colors.primary }]}>{total.toFixed(2)} ETB</Text>
-            </View>
             <TouchableOpacity
-              style={[styles.checkoutBtn, { backgroundColor: theme.colors.primary, opacity: placing ? 0.6 : 1 }]}
+              style={[styles.checkoutBtn, { backgroundColor: theme.colors.primary }]}
               onPress={handlePlaceOrder}
-              disabled={placing}
             >
-              {placing ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.checkoutBtnText}>
-                  {deliveryAddress ? `Place Order · ${total.toFixed(2)} ETB` : 'Select Address & Order'}
-                </Text>
-              )}
+              <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
             </TouchableOpacity>
           </View>
         </>
       )}
 
-      {/* Address Picker Modal */}
-      <AddressPicker
-        visible={showAddressPicker}
-        onClose={() => setShowAddressPicker(false)}
-        onSelect={handleAddressSelect}
-      />
+
     </View>
   );
 };

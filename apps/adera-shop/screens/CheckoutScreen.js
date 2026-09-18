@@ -5,10 +5,13 @@ import { LocationPicker } from '@adera/maps';
 import { supabase } from '@adera/auth/src/supabase';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onCheckoutComplete, onCancel }) {
+export default function CheckoutScreen({ navigation, route }) {
     const theme = useTheme();
     const isDark = theme.isDark;
     const [loading, setLoading] = useState(false);
+
+    const cartItems = route?.params?.cartItems || [];
+    const totalAmount = route?.params?.totalAmount || 0;
 
     const [deliveryMethod, setDeliveryMethod] = useState('standard');
     const [recipientName, setRecipientName] = useState('');
@@ -72,7 +75,7 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                     });
                 if (parcelError) throw parcelError;
             }
-            Alert.alert('Success', 'Order placed successfully!', [{ text: 'OK', onPress: onCheckoutComplete }]);
+            Alert.alert('Success', 'Order placed successfully!', [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]);
         } catch (error) {
             console.error('Checkout Error:', error);
             Alert.alert('Error', 'Failed to place order. Please try again.');
@@ -149,7 +152,7 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                 </Card>
 
                 <Button title="Place Order" onPress={handlePlaceOrder} style={styles.submitButton} size="lg" />
-                <Button title="Cancel" variant="ghost" onPress={onCancel} style={styles.cancelButton} />
+                <Button title="Cancel" variant="ghost" onPress={() => navigation?.goBack?.()} style={styles.cancelButton} />
             </ScrollView>
         </View>
     );
