@@ -294,7 +294,7 @@ const ParcelHistory = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listContent: { paddingBottom: 16 },
-  listHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 20 },
+  listHeader: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 20 },
   heroContainer: { flexDirection: 'row', gap: 16 },
   heroCopy: { flex: 1, gap: 6 },
   heroEyebrow: { fontSize: 13, letterSpacing: 0.2, textTransform: 'uppercase' },
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   heroMetricRow: { flexDirection: 'row', justifyContent: 'space-between' },
   heroMetricItem: { alignItems: 'flex-start', gap: 4 },
   heroMetricMini: { fontSize: 18, fontWeight: '600' },
-  searchInput: { marginTop: 4 },
+  searchInput: { marginTop: 8 },
   statsRow: { gap: 12, paddingRight: 20 },
   statCard: { width: 150, padding: 16, gap: 10 },
   statIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

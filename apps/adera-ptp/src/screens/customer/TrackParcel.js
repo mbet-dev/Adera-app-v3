@@ -653,8 +653,8 @@ const TrackParcel = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 16 },
-  searchSection: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12 },
-  searchCard: { padding: 20 },
+  searchSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
+  searchCard: { padding: 24 },
   searchTitle: { fontSize: 24, fontWeight: '700', marginBottom: 8 },
   searchSubtitle: { fontSize: 14, marginBottom: 20 },
   searchInputContainer: { gap: 12 },

@@ -970,7 +970,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
   },
   headerTitle: {
     fontSize: 20,
@@ -979,7 +980,7 @@ const styles = StyleSheet.create({
   stepIndicator: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 16,
     alignItems: 'center',
   },
   stepItem: {
