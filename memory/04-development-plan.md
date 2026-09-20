@@ -23,23 +23,28 @@
 - ✅ Implement payment verification callback (PaymentCallbackScreen)
 - ✅ Add payment status tracking to parcel/order lifecycle
 
-## Phase 4: Testing & Reliability ← CURRENT
+## Phase 4: Testing & Reliability ← COMPLETE
 **Objective**: Safety net for future changes
-- Set up Jest test infrastructure
-- Unit tests: auth store, cart store, formatters, validators
-- Integration tests: auth flow, parcel creation
-- ESLint + Prettier configuration
+- ✅ Jest test infrastructure with babel-jest transform
+- ✅ 87 unit tests: formatters, validators, auth validation, cart store
+- ESLint + Prettier configuration (still TODO)
 
+## Phase 5: Shop UI Consistency ← COMPLETE
+**Objective**: Cross-app UI alignment
+- ✅ SafeAreaProvider + I18nProvider wired into Shop app root
+- ✅ SafeAreaHeader component for consistent notch-aware headers
+- ✅ All 5 shop screens updated with consistent styling
 
-
-## Phase 5: Notifications & Communication
+## Phase 6: Push Notifications ← COMPLETE
 **Objective**: User engagement
-- Expo Push Notifications integration
-- SMS integration for recipient alerts
-- In-app notification center
-- Notification preferences
+- ✅ NotificationService with Expo Push Notifications (web-safe)
+- ✅ Notifications table with RLS policies and triggers
+- ✅ Parcel status change notification trigger
+- ✅ Push token registration wired into PTP app
+- ✅ NotificationBell with real-time Supabase subscriptions
+- SMS integration for recipient alerts (still TODO)
 
-## Phase 6: UX/UI Refinement
+## Phase 7: UX/UI Refinement
 **Objective**: Polish and delight
 - Complete biometric login implementation
 - Loading skeletons for all screens

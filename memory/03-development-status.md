@@ -1,7 +1,7 @@
 # Development Status
 
 **Last Updated**: 2026-09-16  
-**Current Phase**: Phase 3 — Payment Flow Integration  
+**Current Phase**: Phase 6 — Push Notifications Complete  
 **Branch**: dev  
 
 ## Phase 1 Benchmark (IN PROGRESS)
@@ -36,10 +36,25 @@
 - [x] Case-sensitive TelebirrPayment import fixed
 - [x] Build verified for both apps
 
+### ✅ Phase 4 Complete
+- [x] Jest configuration with babel-jest transform for ESM support
+- [x] 87 unit tests: formatters, validators, auth validation, cart store
+- [x] All tests passing
+
+### ✅ Phase 5 Complete
+- [x] SafeAreaProvider + I18nProvider wired into Shop app root
+- [x] SafeAreaHeader component for consistent notch-aware headers
+- [x] All 5 shop screens updated with SafeAreaHeader
+- [x] Consistent header styling across Market, Product, Cart, Checkout, Orders
+
+### ✅ Phase 6 Complete
+- [x] NotificationService with Expo Push Notifications (web-safe)
+- [x] Notifications table migration with RLS policies
+- [x] Parcel status change notification trigger
+- [x] Push token registration wired into PTP app
+- [x] NotificationBell with real-time Supabase subscriptions
+
 ### ⬜ Not Started
-- [ ] Phase 4: Test infrastructure (Jest)
-- [ ] Phase 5: Push notifications
-- [ ] Phase 6: UX polish
 - [ ] Phase 7: Production hardening (CI/CD, Sentry, security)
 - [ ] Phase 8: Deployment preparation
 
@@ -64,9 +79,9 @@
 | Payment gateway (TeleBirr) | ⬜ Stub |
 | Payment gateway (ArifPay) | ⬜ Stub |
 | Wallet system | ⬜ Stub |
-| Push notifications | ⬜ Missing |
+| Push notifications | ✅ Expo Push + Supabase |
 | SMS integration | ⬜ Missing |
 | Amharic localization | ✅ Strings defined |
-| Image storage | ⬜ Missing |
-| Testing | ⬜ Missing |
+| Image storage | ✅ Supabase Storage buckets |
+| Testing | ✅ 87 Jest tests passing |
 | CI/CD | ⬜ Missing |
