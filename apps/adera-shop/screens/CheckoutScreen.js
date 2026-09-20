@@ -3,21 +3,29 @@ import { View, Text, StyleSheet, ScrollView, Alert, Switch, TouchableOpacity } f
 import { TextInput, Button, Card, useTheme, LoadingScreen } from '@adera/ui';
 import { LocationPicker } from '@adera/maps';
 import { supabase } from '@adera/auth/src/supabase';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { usePayment, openChapaCheckout } from '@adera/payments';
 
 export default function CheckoutScreen({ navigation, route }) {
     const theme = useTheme();
     const isDark = theme.isDark;
+    const { initiatePayment } = usePayment();
     const [loading, setLoading] = useState(false);
 
     const cartItems = route?.params?.cartItems || [];
     const totalAmount = route?.params?.totalAmount || 0;
 
     const [deliveryMethod, setDeliveryMethod] = useState('standard');
+    const [paymentMethod, setPaymentMethod] = useState('cod');
     const [recipientName, setRecipientName] = useState('');
     const [recipientPhone, setRecipientPhone] = useState('');
     const [deliveryLocation, setDeliveryLocation] = useState(null);
     const [deliveryAddress, setDeliveryAddress] = useState('');
+
+    const PAYMENT_METHODS = [
+      { id: 'cod', label: 'Cash on Delivery', icon: 'cash' },
+      { id: 'chapa', label: 'Chapa (Card/Mobile)', icon: 'credit-card' },
+    ];
 
     const DELIVERY_FEE_STANDARD = 150;
     const DELIVERY_FEE_PTP = 250;
@@ -37,6 +45,7 @@ export default function CheckoutScreen({ navigation, route }) {
                 Alert.alert('Error', 'You must be logged in to place an order.');
                 return;
             }
+            const txRef = `SHOP-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert({
@@ -48,9 +57,10 @@ export default function CheckoutScreen({ navigation, route }) {
                     subtotal: totalAmount,
                     delivery_fee: currentDeliveryFee,
                     total_amount: finalTotal,
-                    payment_method: 'cod',
-                    status: 'pending',
+                    payment_method: paymentMethod,
+                    status: paymentMethod === 'chapa' ? 'pending_payment' : 'pending',
                     auto_create_parcel: deliveryMethod === 'ptp',
+                    tx_ref: txRef,
                 })
                 .select()
                 .single();
@@ -75,6 +85,34 @@ export default function CheckoutScreen({ navigation, route }) {
                     });
                 if (parcelError) throw parcelError;
             }
+            // Process Chapa payment if selected
+            if (paymentMethod === 'chapa') {
+                try {
+                    const paymentResult = await initiatePayment({
+                        method: 'chapa',
+                        amount: finalTotal,
+                        orderId: txRef,
+                        customer: {
+                            email: user.email || 'customer@adera.app',
+                            firstName: recipientName.split(' ')[0] || 'Customer',
+                            lastName: recipientName.split(' ').slice(1).join('') || '',
+                            phone: recipientPhone,
+                        },
+                        items: cartItems,
+                    });
+
+                    if (paymentResult?.checkoutUrl) {
+                        await openChapaCheckout(paymentResult.checkoutUrl);
+                    }
+                } catch (paymentError) {
+                    console.error('Chapa payment error:', paymentError);
+                    Alert.alert(
+                        'Order Created, Payment Pending',
+                        'Your order was placed but payment processing encountered an issue. You can pay from order details.',
+                    );
+                }
+            }
+
             Alert.alert('Success', 'Order placed successfully!', [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]);
         } catch (error) {
             console.error('Checkout Error:', error);
@@ -109,6 +147,55 @@ export default function CheckoutScreen({ navigation, route }) {
                             Powered by Adera Peer-to-Peer Logistics. Fast and trackable.
                         </Text>
                     )}
+                </Card>
+
+                {/* Payment Method */}
+                <Card style={styles.section} elevation={1}>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Payment Method</Text>
+                    <View style={styles.paymentMethods}>
+                        {PAYMENT_METHODS.map((method) => (
+                            <TouchableOpacity
+                                key={method.id}
+                                style={[
+                                    styles.paymentMethod,
+                                    {
+                                        backgroundColor: paymentMethod === method.id
+                                            ? theme.colors.primaryContainer
+                                            : theme.colors.surface,
+                                        borderColor: paymentMethod === method.id
+                                            ? theme.colors.primary
+                                            : theme.colors.outline,
+                                    },
+                                ]}
+                                onPress={() => setPaymentMethod(method.id)}
+                            >
+                                <MaterialCommunityIcons
+                                    name={method.icon}
+                                    size={24}
+                                    color={paymentMethod === method.id ? theme.colors.primary : theme.colors.text.secondary}
+                                />
+                                <Text
+                                    style={[
+                                        styles.paymentLabel,
+                                        {
+                                            color: paymentMethod === method.id
+                                                ? theme.colors.primary
+                                                : theme.colors.onSurface,
+                                        },
+                                    ]}
+                                >
+                                    {method.label}
+                                </Text>
+                                {paymentMethod === method.id && (
+                                    <MaterialCommunityIcons
+                                        name="check-circle"
+                                        size={20}
+                                        color={theme.colors.primary}
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </Card>
 
                 {/* Recipient Details */}
@@ -173,4 +260,7 @@ const styles = StyleSheet.create({
     totalText: { fontWeight: 'bold', fontSize: 18 },
     submitButton: { marginTop: 20 },
     cancelButton: { marginTop: 8, marginBottom: 32 },
+    paymentMethods: { gap: 12 },
+    paymentMethod: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, borderWidth: 2, gap: 12 },
+    paymentLabel: { flex: 1, fontSize: 16, fontWeight: '500' },
 });

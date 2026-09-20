@@ -8,6 +8,7 @@ import { ThemeProvider, OnboardingScreen, AppSelectorScreen, LoadingScreen, Mark
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
 import { I18nProvider } from '@adera/localization';
+import { PaymentProvider } from '@adera/payments';
 import AppNavigator from './src/navigation/AppNavigator';
 import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
@@ -187,6 +188,7 @@ export default function App() {
     return (
       <ThemeProvider forceLightMode={false} initialMode={themeMode}>
         <AuthProvider>
+          <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
             <ErrorBoundary fallbackMessage="Adera needs to restart.">
               <View style={styles.container}>
@@ -195,6 +197,7 @@ export default function App() {
               </View>
             </ErrorBoundary>
           </NavigationContainer>
+          </PaymentProvider>
         </AuthProvider>
       </ThemeProvider>
     );

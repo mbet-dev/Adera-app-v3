@@ -7,6 +7,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import { PaymentProvider } from '@adera/payments';
 import Constants from 'expo-constants';
 
 // Screens
@@ -149,6 +150,7 @@ export default function App() {
     return (
       <ThemeProvider forceLightMode={false} initialMode={themeMode}>
         <AuthProvider>
+          <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
             <ErrorBoundary fallbackMessage="Adera Shop needs to restart.">
               <View style={styles.container}>
@@ -157,6 +159,7 @@ export default function App() {
               </View>
             </ErrorBoundary>
           </NavigationContainer>
+          </PaymentProvider>
         </AuthProvider>
       </ThemeProvider>
     );

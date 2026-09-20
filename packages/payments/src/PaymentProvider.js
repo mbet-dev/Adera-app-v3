@@ -30,7 +30,7 @@ export const PaymentProvider = ({ children }) => {
       }
 
       case PaymentMethod.TELEBIRR: {
-        const { initializeTelebirrPayment } = require('./TeleBirrPayment');
+        const { initializeTelebirrPayment } = require('./TelebirrPayment');
         return initializeTelebirrPayment({ amount, orderId, phone: customer.phone });
       }
 
