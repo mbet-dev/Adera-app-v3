@@ -11,6 +11,7 @@ import {
 import { useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useCartStore from '../store/cartStore';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const ShoppingCartScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -82,20 +83,23 @@ const ShoppingCartScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Shopping Cart</Text>
-        {items.length > 0 && (
-          <TouchableOpacity onPress={() => Alert.alert('Clear Cart', 'Remove all items from your cart?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Clear', style: 'destructive', onPress: clearCart },
-          ])}>
-            <Text style={{ color: '#F44336', fontWeight: '600', fontSize: 14 }}>Clear</Text>
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
           </TouchableOpacity>
-        )}            {items.length === 0 && <View style={{ width: 40 }} />}
-      </View>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Shopping Cart</Text>
+          {items.length > 0 && (
+            <TouchableOpacity onPress={() => Alert.alert('Clear Cart', 'Remove all items from your cart?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Clear', style: 'destructive', onPress: clearCart },
+            ])}>
+              <Text style={{ color: '#F44336', fontWeight: '600', fontSize: 14 }}>Clear</Text>
+            </TouchableOpacity>
+          )}
+          {items.length === 0 && <View style={{ width: 40 }} />}
+        </View>
+      </SafeAreaHeader>
 
       {items.length === 0 ? (
         renderEmpty()
@@ -131,7 +135,7 @@ const ShoppingCartScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700' },
   scrollContent: { padding: 20, paddingBottom: 280 },

@@ -18,6 +18,7 @@ import useCartStore from '../store/cartStore';
 import useReviews from '../hooks/useReviews';
 import useOfflineCache from '../hooks/useOfflineCache';
 import WriteReviewModal from '../components/WriteReviewModal';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -129,15 +130,17 @@ const ProductDetailScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]} numberOfLines={1}>{product.name}</Text>
-        <TouchableOpacity onPress={handleShare} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="share-variant" size={22} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]} numberOfLines={1}>{product.name}</Text>
+          <TouchableOpacity onPress={handleShare} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="share-variant" size={22} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaHeader>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Image Gallery */}
@@ -366,7 +369,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, gap: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center' },
   scrollContent: { paddingBottom: 120 },

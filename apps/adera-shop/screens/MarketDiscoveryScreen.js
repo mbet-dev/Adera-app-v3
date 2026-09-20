@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import useCartStore from '../store/cartStore';
 import NotificationBell from '../components/NotificationBell';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const CATEGORIES = ['All', 'Food', 'Fashion', 'Crafts', 'Electronics', 'Household'];
 
@@ -231,25 +232,27 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Adera Shop</Text>
-        <View style={styles.headerActions}>
-          <NotificationBell size={22} color={theme.colors.text.primary} />
-          <TouchableOpacity style={styles.headerBtn} onPress={() => navigation?.navigate?.('cart')}>
-            <MaterialCommunityIcons name="cart-outline" size={24} color={theme.colors.text.primary} />
-            {cartCount > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cartCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          {onLoginRequest && (
-            <TouchableOpacity style={styles.headerBtn} onPress={onLoginRequest}>
-              <MaterialCommunityIcons name="account-circle-outline" size={24} color={theme.colors.text.primary} />
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Adera Shop</Text>
+          <View style={styles.headerActions}>
+            <NotificationBell size={22} color={theme.colors.text.primary} />
+            <TouchableOpacity style={styles.headerBtn} onPress={() => navigation?.navigate?.('cart')}>
+              <MaterialCommunityIcons name="cart-outline" size={24} color={theme.colors.text.primary} />
+              {cartCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
-          )}
+            {onLoginRequest && (
+              <TouchableOpacity style={styles.headerBtn} onPress={onLoginRequest}>
+                <MaterialCommunityIcons name="account-circle-outline" size={24} color={theme.colors.text.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-      </View>
+      </SafeAreaHeader>
 
       {/* Search */}
       <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface }]}>
@@ -370,13 +373,10 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
   },
   headerTitle: { fontSize: 20, fontWeight: '700' },
   headerActions: { flexDirection: 'row', gap: 8 },

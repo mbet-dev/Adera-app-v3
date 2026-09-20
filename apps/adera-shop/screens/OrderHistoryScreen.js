@@ -13,6 +13,7 @@ import { useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import ReviewPromptBanner from '../components/ReviewPromptBanner';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const ORDER_STATUS_META = {
   pending: { label: 'Pending', icon: 'clock-outline', color: '#FF9800' },
@@ -258,13 +259,15 @@ const OrderHistoryScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Order History</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Order History</Text>
+          <View style={{ width: 40 }} />
+        </View>
+      </SafeAreaHeader>
 
       {loading && orders.length === 0 ? (
         <View style={styles.loadingContainer}>
@@ -297,13 +300,10 @@ const OrderHistoryScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700' },

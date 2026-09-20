@@ -7,8 +7,14 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import { I18nProvider } from '@adera/localization';
 import { PaymentProvider } from '@adera/payments';
 import Constants from 'expo-constants';
+
+function I18nSync({ children }) {
+  const { language } = usePreferences();
+  return <I18nProvider language={language || 'en'}>{children}</I18nProvider>;
+}
 
 // Screens
 import MarketDiscoveryScreen from './screens/MarketDiscoveryScreen';
@@ -168,7 +174,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PreferencesProvider>
-        <AppWithTheme />
+        <I18nSync>
+          <AppWithTheme />
+        </I18nSync>
       </PreferencesProvider>
     </SafeAreaProvider>
   );

@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
 import { I18nProvider } from '@adera/localization';
 import { PaymentProvider } from '@adera/payments';
+import { registerForPushNotifications, savePushTokenToSupabase, setupNotificationListeners } from '@adera/utils';
 import AppNavigator from './src/navigation/AppNavigator';
 import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
@@ -72,6 +73,40 @@ function AppContent() {
     setShowAppSelector(false);
     // Stay on selectedApp='shop' so after auth we route to ShopNavigator
   };
+
+  // Register for push notifications when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let notificationListeners = null;
+
+    const setupNotifications = async () => {
+      const token = await registerForPushNotifications();
+      if (token) {
+        await savePushTokenToSupabase(token);
+      }
+
+      notificationListeners = setupNotificationListeners({
+        onReceive: (notification) => {
+          console.log('[App] Foreground notification:', notification.request.content.title);
+        },
+        onTap: (notification) => {
+          const data = notification.request.content.data;
+          console.log('[App] Notification tapped:', data);
+          // Deep link based on notification type
+          if (data?.tracking_id) {
+            // Could navigate to track screen
+          }
+        },
+      });
+    };
+
+    setupNotifications();
+
+    return () => {
+      notificationListeners?.remove();
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && !wasAuthenticated) {

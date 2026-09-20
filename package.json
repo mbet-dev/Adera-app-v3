@@ -17,12 +17,17 @@
     "clear": "npm run clear --workspace=apps/adera-ptp",
     "dev:shop": "npm run dev --workspace=apps/adera-shop",
     "lint": "turbo run lint",
-    "test": "turbo run test",
+    "test": "jest",
     "clean": "turbo run clean",
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^14.0.1",
     "@types/node": "^20.0.0",
+    "babel-jest": "^30.5.2",
+    "jest": "^30.5.2",
+    "react-test-renderer": "^19.3.0",
     "turbo": "^2.5.8",
     "typescript": "^5.0.0"
   },
@@ -32,6 +37,7 @@
   "dependencies": {
     "expo-constants": "^18.0.10",
     "expo-modules-core": "^3.0.25",
+    "react-native-svg": "^15.15.5",
     "zustand": "4.5.2"
   }
 }

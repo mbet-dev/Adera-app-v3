@@ -5,6 +5,7 @@ import { LocationPicker } from '@adera/maps';
 import { supabase } from '@adera/auth/src/supabase';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { usePayment, openChapaCheckout } from '@adera/payments';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 export default function CheckoutScreen({ navigation, route }) {
     const theme = useTheme();
@@ -126,8 +127,10 @@ export default function CheckoutScreen({ navigation, route }) {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <ScrollView contentContainerStyle={styles.content}>
+            <SafeAreaHeader>
                 <Text style={[styles.title, { color: theme.colors.onSurface }]}>Checkout</Text>
+            </SafeAreaHeader>
+            <ScrollView contentContainerStyle={styles.content}>
 
                 {/* Delivery Method */}
                 <Card style={styles.section} elevation={1}>
