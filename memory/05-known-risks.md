@@ -1,6 +1,6 @@
 # Known Risks and Issues
 
-## Resolved (Phase 1)
+## Resolved (Phase 1-3)
 - ✅ Broken package imports (`@adera/payments`, `@adera/localization`, `@adera/utils`)
 - ✅ Dual `users`/`profiles` tables causing data mismatch
 - ✅ Duplicate SQL type definitions
@@ -8,6 +8,7 @@
 - ✅ Aggressive safe area padding causing notch overflow
 - ✅ `WebStabilityWrapper` MutationObserver anti-pattern
 - ✅ Auth store not tracking `last_login_at`
+- ✅ Chapa payment wired into CreateParcel and Shop Checkout
 
 ## Active Risks
 

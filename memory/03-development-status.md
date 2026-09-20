@@ -1,7 +1,7 @@
 # Development Status
 
 **Last Updated**: 2026-09-16  
-**Current Phase**: Phase 2 — Core Infrastructure  
+**Current Phase**: Phase 3 — Payment Flow Integration  
 **Branch**: dev  
 
 ## Phase 1 Benchmark (IN PROGRESS)
@@ -27,8 +27,16 @@
 - [x] @adera/maps index exports LocationService functions
 - [x] Build verified after all changes
 
+### ✅ Phase 3 Complete
+- [x] PaymentProvider wired into both app roots (PTP + Shop)
+- [x] PaymentCallbackScreen created for Chapa redirect/return handling
+- [x] CreateParcel processes Chapa payment after parcel creation
+- [x] Shop CheckoutScreen with Chapa payment method option
+- [x] usePayment, openChapaCheckout, PaymentStatus exports added
+- [x] Case-sensitive TelebirrPayment import fixed
+- [x] Build verified for both apps
+
 ### ⬜ Not Started
-- [ ] Phase 3: Payment flow wiring (Chapa → CreateParcel, Shop checkout)
 - [ ] Phase 4: Test infrastructure (Jest)
 - [ ] Phase 5: Push notifications
 - [ ] Phase 6: UX polish
@@ -52,7 +60,7 @@
 | Shop marketplace | ✅ Complete |
 | Shop cart (Zustand) | ✅ Complete |
 | Database schema | ✅ Complete |
-| Payment gateway (Chapa) | ✅ Implemented |
+| Payment gateway (Chapa) | ✅ Wired into PTP + Shop |
 | Payment gateway (TeleBirr) | ⬜ Stub |
 | Payment gateway (ArifPay) | ⬜ Stub |
 | Wallet system | ⬜ Stub |

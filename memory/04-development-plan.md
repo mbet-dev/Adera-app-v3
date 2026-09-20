@@ -16,19 +16,21 @@
 - ✅ Complete `@adera/maps` integration — LocationService.js created
 - ✅ Implement wallet system (wallets + wallet_transactions tables + functions)
 
-## Phase 3: Payment Flow Integration ← CURRENT
+## Phase 3: Payment Flow Integration ← COMPLETE
 **Objective**: Wire Chapa into actual user flows
-- Integrate Chapa checkout into CreateParcel payment step
-- Integrate Chapa checkout into Shop checkout
-- Implement payment verification callback
-- Add payment status tracking to parcel/order lifecycle
+- ✅ Integrate Chapa checkout into CreateParcel payment step
+- ✅ Integrate Chapa checkout into Shop checkout
+- ✅ Implement payment verification callback (PaymentCallbackScreen)
+- ✅ Add payment status tracking to parcel/order lifecycle
 
-## Phase 4: Testing & Reliability
+## Phase 4: Testing & Reliability ← CURRENT
 **Objective**: Safety net for future changes
 - Set up Jest test infrastructure
 - Unit tests: auth store, cart store, formatters, validators
 - Integration tests: auth flow, parcel creation
 - ESLint + Prettier configuration
+
+
 
 ## Phase 5: Notifications & Communication
 **Objective**: User engagement
