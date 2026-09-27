@@ -3,3 +3,4 @@ export { default as useAuth } from './src/useAuth';
 export { AuthState, UserRole } from './src/types';
 export { supabase } from './src/supabase';
 export { useAuthErrors, useRoleCheck, useNotifications } from './src/hooks/index';
+export { saveBiometricCredentials, loadBiometricCredentials, clearBiometricCredentials } from './src/biometricAuth';

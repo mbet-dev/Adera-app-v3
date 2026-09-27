@@ -1,11 +1,13 @@
 /**
  * Payment types for the Adera Hybrid App.
+ *
+ * Chapa is the single supported payment gateway (card, bank, and mobile money
+ * via Chapa's unified checkout — including TeleBirr funding sources handled by
+ * Chapa itself). Wallet and COD are Adera-native settlement methods.
  */
 
 export const PaymentMethod = {
-  TELEBIRR: 'telebirr',
   CHAPA: 'chapa',
-  ARIFPAY: 'arifpay',
   WALLET: 'wallet',
   COD: 'cod',
 };
@@ -19,17 +21,13 @@ export const PaymentStatus = {
 };
 
 export const PAYMENT_METHOD_LABELS = {
-  [PaymentMethod.TELEBIRR]: 'TeleBirr',
-  [PaymentMethod.CHAPA]: 'Chapa',
-  [PaymentMethod.ARIFPAY]: 'ArifPay',
+  [PaymentMethod.CHAPA]: 'Chapa (Card / Mobile Money)',
   [PaymentMethod.WALLET]: 'Adera Wallet',
   [PaymentMethod.COD]: 'Cash on Delivery',
 };
 
 export const PAYMENT_METHOD_ICONS = {
-  [PaymentMethod.TELEBIRR]: 'cellphone',
   [PaymentMethod.CHAPA]: 'credit-card',
-  [PaymentMethod.ARIFPAY]: 'credit-card-outline',
   [PaymentMethod.WALLET]: 'wallet',
   [PaymentMethod.COD]: 'cash',
 };

@@ -11,7 +11,7 @@ import {
   TextInput as RNTextInput,
   Platform,
 } from 'react-native';
-import { useTheme } from '@adera/ui';
+import { useTheme, ProductGridSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import useCartStore from '../store/cartStore';
@@ -63,11 +63,13 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
 
       let query = supabase
         .from('products')
-        .select(`
+        .select(
+          `
           id, name, price, original_price, category, images, stock_quantity,
           is_available, is_featured, shop_id, created_at,
           shops (name, is_verified)
-        `)
+        `
+        )
         .eq('is_available', true);
 
       // --- Full-text search via Supabase RPC or textSearch ---
@@ -105,9 +107,7 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
           query = query.order('name', { ascending: true });
           break;
         case 'featured':
-          query = query
-            .order('is_featured', { ascending: false })
-            .order('created_at', { ascending: false });
+          query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
           break;
         case 'newest':
         default:
@@ -136,7 +136,7 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
             shopId: item.shop_id,
             stock: item.stock_quantity,
             isFeatured: item.is_featured,
-          })),
+          }))
         );
       }
     } catch (e) {
@@ -158,14 +158,17 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
   }, [selectedCategory, sortBy]);
 
   // Debounced search
-  const handleSearchChange = useCallback((text) => {
-    setSearchQuery(text);
-    setSearching(true);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      fetchProducts(text, selectedCategory, sortBy);
-    }, 400);
-  }, [fetchProducts, selectedCategory, sortBy]);
+  const handleSearchChange = useCallback(
+    (text) => {
+      setSearchQuery(text);
+      setSearching(true);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = setTimeout(() => {
+        fetchProducts(text, selectedCategory, sortBy);
+      }, 400);
+    },
+    [fetchProducts, selectedCategory, sortBy]
+  );
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
@@ -177,11 +180,12 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
     const hasDiscount = item.originalPrice && item.originalPrice > item.price;
     return (
       <TouchableOpacity
-        style={[styles.productCard, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant }]}
+        style={[
+          styles.productCard,
+          { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant },
+        ]}
         activeOpacity={0.85}
-        onPress={() =>
-          navigation?.navigate?.('productDetail', { productId: item.id, productName: item.name })
-        }
+        onPress={() => navigation?.navigate?.('productDetail', { productId: item.id, productName: item.name })}
       >
         <Image source={{ uri: item.image }} style={styles.productImage} />
         {hasDiscount && (
@@ -198,14 +202,14 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
           </View>
         )}
         <View style={styles.productInfo}>
-          <Text style={[styles.productName, { color: theme.colors.text.primary }]} numberOfLines={2}>{item.name}</Text>
+          <Text style={[styles.productName, { color: theme.colors.text.primary }]} numberOfLines={2}>
+            {item.name}
+          </Text>
           <Text style={[styles.shopName, { color: theme.colors.text.secondary }]} numberOfLines={1}>
             {item.shop}
           </Text>
           <View style={styles.priceRow}>
-            <Text style={[styles.productPrice, { color: theme.colors.primary }]}>
-              {item.price.toFixed(2)} ETB
-            </Text>
+            <Text style={[styles.productPrice, { color: theme.colors.primary }]}>{item.price.toFixed(2)} ETB</Text>
             {hasDiscount && (
               <Text style={[styles.originalPrice, { color: theme.colors.text.secondary }]}>
                 {item.originalPrice.toFixed(2)}
@@ -222,9 +226,15 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
 
   if (loading && products.length === 0) {
     return (
-      <View style={[styles.container, styles.center, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={{ marginTop: 12, color: theme.colors.text.secondary }}>Loading products…</Text>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <SafeAreaHeader>
+          <View style={styles.headerRow}>
+            <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Adera Shop</Text>
+          </View>
+        </SafeAreaHeader>
+        <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+          <ProductGridSkeleton count={6} />
+        </View>
       </View>
     );
   }
@@ -256,7 +266,12 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
 
       {/* Search */}
       <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface }]}>
-        <View style={[styles.searchWrapper, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}>
+        <View
+          style={[
+            styles.searchWrapper,
+            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
+          ]}
+        >
           <MaterialCommunityIcons name="magnify" size={20} color={theme.colors.text.secondary} />
           <RNTextInput
             style={[styles.searchInput, { color: theme.colors.text.primary }]}
@@ -307,7 +322,12 @@ const MarketDiscoveryScreen = ({ navigation, onLoginRequest }) => {
       </View>
 
       {/* Sort Bar */}
-      <View style={[styles.sortContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
+      <View
+        style={[
+          styles.sortContainer,
+          { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant },
+        ]}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortScroll}>
           {SORT_OPTIONS.map((opt) => {
             const isActive = sortBy === opt.key;

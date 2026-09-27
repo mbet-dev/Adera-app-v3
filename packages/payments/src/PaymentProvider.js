@@ -29,16 +29,6 @@ export const PaymentProvider = ({ children }) => {
         });
       }
 
-      case PaymentMethod.TELEBIRR: {
-        const { initializeTelebirrPayment } = require('./TelebirrPayment');
-        return initializeTelebirrPayment({ amount, orderId, phone: customer.phone });
-      }
-
-      case PaymentMethod.ARIFPAY: {
-        const { initializeArifPayPayment } = require('./ArifPayPayment');
-        return initializeArifPayPayment({ amount, email: customer.email, phone: customer.phone });
-      }
-
       case PaymentMethod.WALLET:
         // Wallet payment is handled server-side after balance check
         return { confirmed: false, requiresBalanceCheck: true };
@@ -60,14 +50,6 @@ export const PaymentProvider = ({ children }) => {
       case PaymentMethod.CHAPA: {
         const { verifyChapaTransaction } = require('./ChapaPayment');
         return verifyChapaTransaction(txRef);
-      }
-      case PaymentMethod.TELEBIRR: {
-        const { verifyTelebirrPayment } = require('./TelebirrPayment');
-        return verifyTelebirrPayment(txRef);
-      }
-      case PaymentMethod.ARIFPAY: {
-        const { verifyArifPayPayment } = require('./ArifPayPayment');
-        return verifyArifPayPayment(txRef);
       }
       default:
         return { status: PaymentStatus.COMPLETED };

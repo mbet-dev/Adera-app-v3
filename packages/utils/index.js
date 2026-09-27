@@ -11,3 +11,9 @@ export {
   scheduleLocalNotification,
   clearBadge,
 } from './src/NotificationService';
+export {
+  initSentry,
+  captureException,
+  captureMessage,
+  withSentryErrorBoundary,
+} from './src/SentryService';

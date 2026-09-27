@@ -1,19 +1,19 @@
 /**
  * Safe wrapper for expo-barcode-scanner that handles missing native module
  * during development phase.
- * 
+ *
  * TODO: Remove this wrapper once native module is properly linked.
  * For production, run: npx expo prebuild --clean && npx expo run:android/ios
  */
 
 let BarCodeScannerModule = null;
-let isAvailable = false;
+let isAvailable;
 
 try {
   // Try to import the native module
   BarCodeScannerModule = require('expo-barcode-scanner').BarCodeScanner;
   isAvailable = true;
-} catch (error) {
+} catch {
   console.warn('[DEV] BarCodeScanner native module not available. Using mock fallback.');
   isAvailable = false;
 }

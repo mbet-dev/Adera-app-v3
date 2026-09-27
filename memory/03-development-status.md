@@ -33,7 +33,7 @@
 - [x] CreateParcel processes Chapa payment after parcel creation
 - [x] Shop CheckoutScreen with Chapa payment method option
 - [x] usePayment, openChapaCheckout, PaymentStatus exports added
-- [x] Case-sensitive TelebirrPayment import fixed
+- [x] Chapa is the sole gateway (Telebirr/ArifPay stubs removed 2026-09-27)
 - [x] Build verified for both apps
 
 ### ✅ Phase 4 Complete
@@ -54,9 +54,17 @@
 - [x] Push token registration wired into PTP app
 - [x] NotificationBell with real-time Supabase subscriptions
 
+### ✅ Phase 7 Complete (2026-09-27)
+- [x] Loading skeletons (@adera/ui) — dashboard, parcel list, product grid/detail, orders, tracking
+- [x] Biometric login — keystore-backed credentials, consent prompt on first login, clear-on-disable
+- [x] ESLint 9 (flat config) + Prettier — lint passes with 0 errors
+- [x] Sentry error tracking — web-safe, DSN-gated no-op in dev, PII stripped
+- [x] GitHub Actions CI — lint → test → audit → web builds (both apps)
+- [x] Security audit doc (docs/security-audit.md)
+- [x] Development plan v2 — Telebirr/ArifPay dropped, Chapa-only
+
 ### ⬜ Not Started
-- [ ] Phase 7: Production hardening (CI/CD, Sentry, security)
-- [ ] Phase 8: Deployment preparation
+- [ ] Phase 8: Deployment preparation (RLS matrix review, EAS builds, SMS alerts, release docs)
 
 ## Feature Matrix
 
@@ -76,12 +84,15 @@
 | Shop cart (Zustand) | ✅ Complete |
 | Database schema | ✅ Complete |
 | Payment gateway (Chapa) | ✅ Wired into PTP + Shop |
-| Payment gateway (TeleBirr) | ⬜ Stub |
-| Payment gateway (ArifPay) | ⬜ Stub |
+| Payment gateway (TeleBirr/ArifPay) | ❌ Dropped — Chapa settles via TeleBirr etc. |
 | Wallet system | ⬜ Stub |
 | Push notifications | ✅ Expo Push + Supabase |
 | SMS integration | ⬜ Missing |
 | Amharic localization | ✅ Strings defined |
 | Image storage | ✅ Supabase Storage buckets |
 | Testing | ✅ 87 Jest tests passing |
-| CI/CD | ⬜ Missing |
+| Error tracking (Sentry) | ✅ Wired, DSN-gated |
+| CI/CD | ✅ GitHub Actions (lint/test/audit/build) |
+| Loading skeletons | ✅ All data screens |
+| Biometric login | ✅ Native (fingerprint/face) |
+| Linting/formatting | ✅ ESLint 9 + Prettier |

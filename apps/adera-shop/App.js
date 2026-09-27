@@ -9,7 +9,11 @@ import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
 import { I18nProvider } from '@adera/localization';
 import { PaymentProvider } from '@adera/payments';
+import { initSentry, captureException } from '@adera/utils';
 import Constants from 'expo-constants';
+
+// Initialize Sentry error tracking as early as possible (no-op without EXPO_PUBLIC_SENTRY_DSN)
+initSentry();
 
 function I18nSync({ children }) {
   const { language } = usePreferences();
@@ -158,7 +162,10 @@ export default function App() {
         <AuthProvider>
           <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
-            <ErrorBoundary fallbackMessage="Adera Shop needs to restart.">
+            <ErrorBoundary
+              fallbackMessage="Adera Shop needs to restart."
+              onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
+            >
               <View style={styles.container}>
                 <StatusBar style="auto" />
                 <AppContent />

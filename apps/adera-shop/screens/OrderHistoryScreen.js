@@ -1,15 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  SectionList,
-  ActivityIndicator,
-} from 'react-native';
-import { useTheme } from '@adera/ui';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, SectionList } from 'react-native';
+import { useTheme, OrderListSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import ReviewPromptBanner from '../components/ReviewPromptBanner';
@@ -51,7 +42,9 @@ const OrderHistoryScreen = ({ navigation }) => {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setOrders([]);
         return;
@@ -59,7 +52,8 @@ const OrderHistoryScreen = ({ navigation }) => {
 
       const { data, error: fetchError } = await supabase
         .from('orders')
-        .select(`
+        .select(
+          `
           id, order_number, status, subtotal, delivery_fee, tax_amount,
           discount_amount, total_amount, payment_method, payment_status,
           delivery_address, delivery_notes,
@@ -68,7 +62,8 @@ const OrderHistoryScreen = ({ navigation }) => {
           order_items (
             id, product_name, product_price, quantity, item_total
           )
-        `)
+        `
+        )
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -115,7 +110,8 @@ const OrderHistoryScreen = ({ navigation }) => {
 
   const filteredOrders = useMemo(() => {
     if (filter === 'all') return orders;
-    if (filter === 'active') return orders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
+    if (filter === 'active')
+      return orders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
     return orders.filter((o) => o.status === filter);
   }, [orders, filter]);
 
@@ -155,14 +151,24 @@ const OrderHistoryScreen = ({ navigation }) => {
     const statusMeta = ORDER_STATUS_META[item.status] || ORDER_STATUS_META.pending;
 
     return (
-      <View style={[styles.orderCard, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant }]}>
+      <View
+        style={[
+          styles.orderCard,
+          { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant },
+        ]}
+      >
         {/* Header */}
         <View style={styles.orderHeader}>
           <View style={styles.orderHeaderLeft}>
             <Text style={[styles.orderNumber, { color: theme.colors.text.primary }]}>{item.orderNumber}</Text>
             <Text style={[styles.orderDate, { color: theme.colors.text.secondary }]}>{formatDate(item.createdAt)}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: isDark ? `${statusMeta.color}22` : `${statusMeta.color}18` }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: isDark ? `${statusMeta.color}22` : `${statusMeta.color}18` },
+            ]}
+          >
             <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
             <Text style={[styles.statusText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
           </View>
@@ -270,8 +276,8 @@ const OrderHistoryScreen = ({ navigation }) => {
       </SafeAreaHeader>
 
       {loading && orders.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+        <View style={[styles.loadingContainer, { paddingHorizontal: 16, alignItems: 'stretch' }]}>
+          <OrderListSkeleton count={4} />
         </View>
       ) : (
         <SectionList
@@ -340,7 +346,14 @@ const styles = StyleSheet.create({
   orderHeaderLeft: { flex: 1, gap: 2 },
   orderNumber: { fontSize: 16, fontWeight: '700' },
   orderDate: { fontSize: 12 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
   statusText: { fontSize: 12, fontWeight: '700' },
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   shopIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
@@ -362,7 +375,14 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 14, fontWeight: '600' },
   totalValue: { fontSize: 18, fontWeight: '800' },
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 40, paddingBottom: 100 },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 40,
+    paddingBottom: 100,
+  },
   emptyTitle: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
   emptySubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   browseBtn: { marginTop: 16, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },

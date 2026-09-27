@@ -3,7 +3,7 @@ module.exports = {
   roots: ['<rootDir>/packages', '<rootDir>/apps'],
   testMatch: ['**/__tests__/**/*.js', '**/*.test.js'],
   transform: {
-    '^.+\.jsx?$': 'babel-jest',
+    '^.+\\.jsx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/.*|native-base|react-native-svg|@adera/)',

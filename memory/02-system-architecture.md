@@ -9,7 +9,7 @@ Shared Packages (@adera/ui, auth, preferences, maps, utils, payments, localizati
     ↓
 Supabase (PostgreSQL + Auth + Storage + Real-time)
     ↓
-External APIs (Chapa, TeleBirr, OpenStreetMap)
+External APIs (Chapa, OpenStreetMap)
 ```
 
 ## Monorepo Structure
@@ -40,7 +40,7 @@ adera-hybrid-app/
 │   ├── preferences/        # @adera/preferences — theme/language/biometric
 │   ├── maps/               # @adera/maps — location services
 │   ├── utils/              # @adera/utils — QR, formatters, validators
-│   ├── payments/           # @adera/payments — Chapa (implemented), TeleBirr/ArifPay (stubs)
+│   ├── payments/           # @adera/payments — Chapa (sole gateway), Wallet, COD
 │   └── localization/       # @adera/localization — i18n with English + Amharic
 ├── supabase/               # Database schema, functions, migrations
 ├── memory/                 # Project knowledge bank

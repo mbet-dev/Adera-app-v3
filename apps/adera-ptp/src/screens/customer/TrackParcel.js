@@ -7,11 +7,10 @@ import {
   TouchableOpacity,
   TextInput as RNTextInput,
   Alert,
-  ActivityIndicator,
   Share,
   Platform,
 } from 'react-native';
-import { SafeArea, Card, Button, useTheme } from '@adera/ui';
+import { SafeArea, Card, Button, useTheme, TrackResultSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -60,7 +59,9 @@ const TrackParcel = ({ navigation, route }) => {
           // Delivered — celebration pattern
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setTimeout(() => {
-            try { Haptics?.impactAsync && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); } catch {}
+            try {
+              Haptics?.impactAsync && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            } catch {}
           }, 200);
         } else {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -72,11 +73,16 @@ const TrackParcel = ({ navigation, route }) => {
     try {
       if (Audio?.Audio) {
         // Use the system notification sound
-        const { sound } = await Audio.Audio.Sound.createAsync(
-          Audio.Audio.Sound.COMPATIBLE_NOTIFICATION_URI || null,
-          { shouldPlay: true, volume: 0.4, isLooping: false }
-        );
-        setTimeout(() => { try { sound.unloadAsync(); } catch {} }, 3000);
+        const { sound } = await Audio.Audio.Sound.createAsync(Audio.Audio.Sound.COMPATIBLE_NOTIFICATION_URI || null, {
+          shouldPlay: true,
+          volume: 0.4,
+          isLooping: false,
+        });
+        setTimeout(() => {
+          try {
+            sound.unloadAsync();
+          } catch {}
+        }, 3000);
       }
     } catch {
       // Audio not available — haptics only
@@ -114,40 +120,98 @@ const TrackParcel = ({ navigation, route }) => {
       // Cache valid for 1 hour
       if (Date.now() - parcel.ts > 3600000) return null;
       return { parcelData: parcel.data, events: events.data };
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }, []);
 
-  const fetchParcel = useCallback(async (code) => {
-    setIsLoading(true);
-    setError('');
-    setEmpty(false);
-    setParcelData(null);
-    setParcelEvents([]);
+  const fetchParcel = useCallback(
+    async (code) => {
+      setIsLoading(true);
+      setError('');
+      setEmpty(false);
+      setParcelData(null);
+      setParcelEvents([]);
 
-    if (abortRef.current) abortRef.current.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    const normalizedCode = code.trim().toUpperCase();
+      const normalizedCode = code.trim().toUpperCase();
 
-    try {
-      // Fetch parcel from Supabase
-      const { data: parcel, error: parcelError } = await supabase
-        .from('parcels')
-        .select(`
+      try {
+        // Fetch parcel from Supabase
+        const { data: parcel, error: parcelError } = await supabase
+          .from('parcels')
+          .select(
+            `
           id, tracking_id, status, recipient_name, recipient_phone,
           pickup_address, delivery_address, delivery_fee, total_amount,
           payment_method, payment_status, fragile, urgent,
           created_at, updated_at, estimated_delivery,
           description, weight, sender_id
-        `)
-        .eq('tracking_id', normalizedCode)
-        .single();
+        `
+          )
+          .eq('tracking_id', normalizedCode)
+          .single();
 
-      if (controller.signal.aborted) return;
+        if (controller.signal.aborted) return;
 
-      if (parcelError || !parcel) {
-        // Network failed — try offline cache
+        if (parcelError || !parcel) {
+          // Network failed — try offline cache
+          const cached = await loadParcelCache(normalizedCode);
+          if (cached) {
+            setParcelData(cached.parcelData);
+            setParcelEvents(cached.events);
+            setLastUpdate(new Date());
+            setEmpty(false);
+          } else {
+            setEmpty(true);
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch parcel events (timeline)
+        const { data: events } = await supabase
+          .from('parcel_events')
+          .select('id, status, actor_id, actor_role, location, address, notes, event_time, created_at')
+          .eq('parcel_id', parcel.id)
+          .order('event_time', { ascending: true });
+
+        if (controller.signal.aborted) return;
+
+        const mappedParcel = {
+          id: parcel.id,
+          trackingId: parcel.tracking_id,
+          currentStatus: parcel.status,
+          statusLabel: STATUS_META[parcel.status]?.label || 'Unknown',
+          recipient: parcel.recipient_name,
+          recipientPhone: parcel.recipient_phone,
+          estimatedDelivery: parcel.estimated_delivery,
+          pickupAddress: parcel.pickup_address,
+          deliveryAddress: parcel.delivery_address,
+          totalAmount: parcel.total_amount,
+          paymentMethod: parcel.payment_method,
+          paymentStatus: parcel.payment_status,
+          fragile: parcel.fragile,
+          urgent: parcel.urgent,
+          description: parcel.description,
+          createdAt: parcel.created_at,
+        };
+
+        const mappedEvents = events || [];
+
+        setParcelData(mappedParcel);
+        setParcelEvents(mappedEvents);
+        setLastUpdate(new Date());
+        setEmpty(false);
+
+        // Cache for offline access
+        saveParcelCache(parcel.id, parcel.tracking_id, mappedParcel, mappedEvents);
+      } catch (e) {
+        if (e?.name === 'AbortError' || controller?.signal?.aborted) return;
+        // Last resort: try cache
         const cached = await loadParcelCache(normalizedCode);
         if (cached) {
           setParcelData(cached.parcelData);
@@ -155,65 +219,14 @@ const TrackParcel = ({ navigation, route }) => {
           setLastUpdate(new Date());
           setEmpty(false);
         } else {
-          setEmpty(true);
+          setError('Failed to fetch tracking information. Please try again.');
         }
+      } finally {
         setIsLoading(false);
-        return;
       }
-
-      // Fetch parcel events (timeline)
-      const { data: events } = await supabase
-        .from('parcel_events')
-        .select('id, status, actor_id, actor_role, location, address, notes, event_time, created_at')
-        .eq('parcel_id', parcel.id)
-        .order('event_time', { ascending: true });
-
-      if (controller.signal.aborted) return;
-
-      const mappedParcel = {
-        id: parcel.id,
-        trackingId: parcel.tracking_id,
-        currentStatus: parcel.status,
-        statusLabel: STATUS_META[parcel.status]?.label || 'Unknown',
-        recipient: parcel.recipient_name,
-        recipientPhone: parcel.recipient_phone,
-        estimatedDelivery: parcel.estimated_delivery,
-        pickupAddress: parcel.pickup_address,
-        deliveryAddress: parcel.delivery_address,
-        totalAmount: parcel.total_amount,
-        paymentMethod: parcel.payment_method,
-        paymentStatus: parcel.payment_status,
-        fragile: parcel.fragile,
-        urgent: parcel.urgent,
-        description: parcel.description,
-        createdAt: parcel.created_at,
-      };
-
-      const mappedEvents = events || [];
-
-      setParcelData(mappedParcel);
-      setParcelEvents(mappedEvents);
-      setLastUpdate(new Date());
-      setEmpty(false);
-
-      // Cache for offline access
-      saveParcelCache(parcel.id, parcel.tracking_id, mappedParcel, mappedEvents);
-    } catch (e) {
-      if (e?.name === 'AbortError' || controller?.signal?.aborted) return;
-      // Last resort: try cache
-      const cached = await loadParcelCache(normalizedCode);
-      if (cached) {
-        setParcelData(cached.parcelData);
-        setParcelEvents(cached.events);
-        setLastUpdate(new Date());
-        setEmpty(false);
-      } else {
-        setError('Failed to fetch tracking information. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [saveParcelCache, loadParcelCache]);
+    },
+    [saveParcelCache, loadParcelCache]
+  );
 
   // ─── Real-time subscription ───
   useEffect(() => {
@@ -270,7 +283,7 @@ const TrackParcel = ({ navigation, route }) => {
               playUpdateFeedback(updated.status);
             }
             lastStatusRef.current = updated.status;
-          },
+          }
         )
         // Listen for new parcel events (timeline additions)
         .on(
@@ -287,17 +300,20 @@ const TrackParcel = ({ navigation, route }) => {
             setParcelEvents((prev) => {
               // Avoid duplicates
               if (prev.some((e) => e.id === newEvent.id)) return prev;
-              return [...prev, {
-                id: newEvent.id,
-                status: newEvent.status,
-                actor_id: newEvent.actor_id,
-                actor_role: newEvent.actor_role,
-                location: newEvent.location,
-                address: newEvent.address,
-                notes: newEvent.notes,
-                event_time: newEvent.event_time,
-                created_at: newEvent.created_at,
-              }].sort((a, b) => new Date(a.event_time || a.created_at) - new Date(b.event_time || b.created_at));
+              return [
+                ...prev,
+                {
+                  id: newEvent.id,
+                  status: newEvent.status,
+                  actor_id: newEvent.actor_id,
+                  actor_role: newEvent.actor_role,
+                  location: newEvent.location,
+                  address: newEvent.address,
+                  notes: newEvent.notes,
+                  event_time: newEvent.event_time,
+                  created_at: newEvent.created_at,
+                },
+              ].sort((a, b) => new Date(a.event_time || a.created_at) - new Date(b.event_time || b.created_at));
             });
             setLastUpdate(new Date());
             // Haptic feedback for new events
@@ -306,7 +322,7 @@ const TrackParcel = ({ navigation, route }) => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
               }
             } catch {}
-          },
+          }
         )
         .subscribe((status) => {
           if (mounted) {
@@ -413,10 +429,22 @@ const TrackParcel = ({ navigation, route }) => {
     <View style={styles.searchSection}>
       <Card style={styles.searchCard}>
         <Text style={[styles.searchTitle, { color: theme.colors.text.primary }]}>Track Your Parcel</Text>
-        <Text style={[styles.searchSubtitle, { color: theme.colors.text.secondary }]}>Enter your tracking ID to view real-time status</Text>
+        <Text style={[styles.searchSubtitle, { color: theme.colors.text.secondary }]}>
+          Enter your tracking ID to view real-time status
+        </Text>
         <View style={styles.searchInputContainer}>
-          <View style={[styles.searchInputWrapper, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
-            <MaterialCommunityIcons name="magnify" size={24} color={theme.colors.text.secondary} style={styles.searchIcon} />
+          <View
+            style={[
+              styles.searchInputWrapper,
+              { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color={theme.colors.text.secondary}
+              style={styles.searchIcon}
+            />
             <RNTextInput
               style={[styles.searchInput, { color: theme.colors.text.primary }]}
               placeholder="e.g., ADE20250110-3"
@@ -460,9 +488,8 @@ const TrackParcel = ({ navigation, route }) => {
   const renderParcelDetails = () => {
     if (isLoading) {
       return (
-        <View style={[styles.detailsSection, { alignItems: 'center', paddingVertical: 32 }]}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={{ marginTop: 12, color: theme.colors.text.secondary, fontSize: 15 }}>Fetching tracking info…</Text>
+        <View style={[styles.detailsSection, { paddingVertical: 8 }]}>
+          <TrackResultSkeleton />
         </View>
       );
     }
@@ -484,7 +511,9 @@ const TrackParcel = ({ navigation, route }) => {
         <View style={[styles.detailsSection, { gap: 12 }]} accessibilityLabel="Empty State" testID="empty-state">
           <Card style={{ padding: 24, alignItems: 'center' }}>
             <MaterialCommunityIcons name="package-variant" size={48} color={theme.colors.text.secondary} />
-            <Text style={{ marginTop: 12, color: theme.colors.text.primary, fontWeight: '700', fontSize: 18 }}>No parcel found</Text>
+            <Text style={{ marginTop: 12, color: theme.colors.text.primary, fontWeight: '700', fontSize: 18 }}>
+              No parcel found
+            </Text>
             <Text style={{ marginTop: 8, color: theme.colors.text.secondary, textAlign: 'center', lineHeight: 20 }}>
               No parcel matches tracking ID "{trackingId.trim().toUpperCase()}". Please check and try again.
             </Text>
@@ -506,7 +535,12 @@ const TrackParcel = ({ navigation, route }) => {
         {/* Status Hero Card */}
         <Card style={[styles.statusCard, { borderLeftWidth: 4, borderLeftColor: statusColor }]}>
           <View style={styles.statusHeader}>
-            <View style={[styles.statusIconContainer, { backgroundColor: isDark ? `${statusColor}22` : `${statusColor}15` }]}>
+            <View
+              style={[
+                styles.statusIconContainer,
+                { backgroundColor: isDark ? `${statusColor}22` : `${statusColor}15` },
+              ]}
+            >
               <MaterialCommunityIcons name={getStatusIcon(parcelData.currentStatus)} size={36} color={statusColor} />
             </View>
             <View style={styles.statusInfo}>
@@ -525,11 +559,19 @@ const TrackParcel = ({ navigation, route }) => {
           {[
             { icon: 'barcode', label: 'Tracking ID', value: parcelData.trackingId },
             { icon: 'account', label: 'Recipient', value: parcelData.recipient },
-            parcelData.deliveryAddress && { icon: 'map-marker', label: 'Destination', value: parcelData.deliveryAddress },
+            parcelData.deliveryAddress && {
+              icon: 'map-marker',
+              label: 'Destination',
+              value: parcelData.deliveryAddress,
+            },
             parcelData.estimatedDelivery && {
               icon: 'calendar-clock',
               label: 'Est. Delivery',
-              value: new Date(parcelData.estimatedDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              value: new Date(parcelData.estimatedDelivery).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
             },
             { icon: 'cash', label: 'Total', value: `${Number(parcelData.totalAmount).toFixed(2)} ETB` },
           ]
@@ -538,7 +580,9 @@ const TrackParcel = ({ navigation, route }) => {
               <View key={row.label} style={styles.statusDetailRow}>
                 <MaterialCommunityIcons name={row.icon} size={18} color={theme.colors.text.secondary} />
                 <Text style={[styles.statusDetailLabel, { color: theme.colors.text.secondary }]}>{row.label}</Text>
-                <Text style={[styles.statusDetailValue, { color: theme.colors.text.primary }]} numberOfLines={1}>{row.value}</Text>
+                <Text style={[styles.statusDetailValue, { color: theme.colors.text.primary }]} numberOfLines={1}>
+                  {row.value}
+                </Text>
               </View>
             ))}
 
@@ -555,7 +599,9 @@ const TrackParcel = ({ navigation, route }) => {
                 <Text style={[styles.tagText, { color: '#F44336' }]}>Fragile</Text>
               </View>
             )}
-            <View style={[styles.tag, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+            <View
+              style={[styles.tag, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}
+            >
               <MaterialCommunityIcons name="credit-card" size={14} color={theme.colors.text.secondary} />
               <Text style={[styles.tagText, { color: theme.colors.text.secondary }]}>{parcelData.paymentMethod}</Text>
             </View>
@@ -585,10 +631,19 @@ const TrackParcel = ({ navigation, route }) => {
                       },
                     ]}
                   >
-                    <MaterialCommunityIcons name={event.icon} size={16} color={event.completed ? '#FFF' : theme.colors.text.secondary} />
+                    <MaterialCommunityIcons
+                      name={event.icon}
+                      size={16}
+                      color={event.completed ? '#FFF' : theme.colors.text.secondary}
+                    />
                   </View>
                   {index < timeline.length - 1 && (
-                    <View style={[styles.timelineLine, { backgroundColor: event.completed ? event.color : theme.colors.surfaceVariant }]} />
+                    <View
+                      style={[
+                        styles.timelineLine,
+                        { backgroundColor: event.completed ? event.color : theme.colors.surfaceVariant },
+                      ]}
+                    />
                   )}
                 </View>
                 <View style={styles.timelineContent}>
@@ -605,7 +660,10 @@ const TrackParcel = ({ navigation, route }) => {
                     {event.label}
                   </Text>
                   {event.notes && (
-                    <Text style={[styles.timelineDescription, { color: theme.colors.text.secondary }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.timelineDescription, { color: theme.colors.text.secondary }]}
+                      numberOfLines={2}
+                    >
                       {event.notes}
                     </Text>
                   )}
@@ -658,7 +716,13 @@ const styles = StyleSheet.create({
   searchTitle: { fontSize: 24, fontWeight: '700', marginBottom: 8 },
   searchSubtitle: { fontSize: 14, marginBottom: 20 },
   searchInputContainer: { gap: 12 },
-  searchInputWrapper: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 12 },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, fontSize: 16, paddingVertical: 14 },
   trackButton: { width: '100%' },
@@ -681,7 +745,15 @@ const styles = StyleSheet.create({
   statusDetailLabel: { fontSize: 14, flex: 1 },
   statusDetailValue: { fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
   tagText: { fontSize: 12, fontWeight: '600' },
   // Timeline
   timelineCard: { padding: 20, marginBottom: 16 },
@@ -691,7 +763,14 @@ const styles = StyleSheet.create({
   timelineLeftColumn: { width: 56, paddingTop: 4 },
   timelineTime: { fontSize: 11 },
   timelineCenter: { width: 40, alignItems: 'center' },
-  timelineDot: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 3 },
+  timelineDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+  },
   timelineLine: { flex: 1, width: 2, marginVertical: 4 },
   timelineContent: { flex: 1, paddingTop: 4, paddingBottom: 12 },
   timelineLabel: { fontSize: 15, marginBottom: 2 },

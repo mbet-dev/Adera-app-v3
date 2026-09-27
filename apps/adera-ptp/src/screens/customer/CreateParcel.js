@@ -37,7 +37,6 @@ const PACKAGE_TYPES = [
 
 const PAYMENT_METHODS = [
   { id: 'wallet', label: 'Wallet', icon: 'wallet', available: true },
-  { id: 'telebirr', label: 'Telebirr', icon: 'cellphone', available: true },
   { id: 'chapa', label: 'Chapa', icon: 'credit-card', available: true },
   { id: 'cod', label: 'Cash on Dropoff', icon: 'cash', available: true },
 ];
@@ -356,7 +355,7 @@ const CreateParcel = ({ navigation }) => {
 
       // Process payment if not COD or Wallet
       const txRef = createdParcel.tracking_id || `ADERA-${Date.now()}`;
-      const shouldProcessPayment = paymentMethod === 'chapa' || paymentMethod === 'telebirr';
+      const shouldProcessPayment = paymentMethod === 'chapa';
 
       if (shouldProcessPayment) {
         try {

@@ -14,10 +14,10 @@
 5. **Partner Management**: Dashboard, QR scanning, earnings
 
 ## Payment Methods
-- TeleBirr (Ethiopian mobile money) — stub, pending full implementation
-- Chapa (Ethiopian payment gateway) — **primary**, implemented
-- ArifPay — stub, pending implementation
-- Adera Wallet — stub, pending implementation
+- Chapa (Ethiopian payment gateway) — **primary and only online gateway**, implemented.
+  Chapa's unified checkout settles via TeleBirr, CBE Birr, M-Pesa, Amole, and bank
+  transfer, so no direct TeleBirr/ArifPay integration is needed (dropped 2026-09-27).
+- Adera Wallet — in-app balance (wallets table + credit/debit functions implemented)
 - Cash on Delivery — supported
 
 ## Localization

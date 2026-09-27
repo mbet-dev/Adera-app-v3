@@ -9,13 +9,16 @@ import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
 import { I18nProvider } from '@adera/localization';
 import { PaymentProvider } from '@adera/payments';
-import { registerForPushNotifications, savePushTokenToSupabase, setupNotificationListeners } from '@adera/utils';
+import { registerForPushNotifications, savePushTokenToSupabase, setupNotificationListeners, initSentry, captureException } from '@adera/utils';
 import AppNavigator from './src/navigation/AppNavigator';
 import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { AppFlowProvider } from './src/context/AppFlowContext';
 import ThemelessLoadingScreen from './src/ThemelessLoadingScreen';
 import Constants from 'expo-constants';
+
+// Initialize Sentry error tracking as early as possible (no-op without EXPO_PUBLIC_SENTRY_DSN)
+initSentry();
 
 function I18nSync({ children }) {
   const { language } = usePreferences();
@@ -225,7 +228,10 @@ export default function App() {
         <AuthProvider>
           <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
-            <ErrorBoundary fallbackMessage="Adera needs to restart.">
+            <ErrorBoundary
+              fallbackMessage="Adera needs to restart."
+              onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
+            >
               <View style={styles.container}>
                 <StatusBar style="auto" />
                 <AppContent />

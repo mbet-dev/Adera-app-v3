@@ -59,11 +59,7 @@ const SignUpScreen = ({ navigation }) => {
       };
 
       // Attempt sign up
-      await signUp(
-        values.email.trim().toLowerCase(),
-        values.password,
-        userData
-      );
+      await signUp(values.email.trim().toLowerCase(), values.password, userData);
 
       // Success - show elegant modal
       setSignupEmail(values.email);
@@ -80,7 +76,7 @@ const SignUpScreen = ({ navigation }) => {
           'Unable to connect to the server. Please check your internet connection and try again.',
           [
             { text: 'Retry', onPress: () => handleSignUp(values) },
-            { text: 'Cancel', style: 'cancel' }
+            { text: 'Cancel', style: 'cancel' },
           ]
         );
       } else {
@@ -99,12 +95,12 @@ const SignUpScreen = ({ navigation }) => {
       .required('First name is required')
       .min(2, 'First name must be at least 2 characters')
       .max(50, 'First name is too long')
-      .matches(/^[a-zA-Z\s\'-]+$/, 'First name contains invalid characters'),
+      .matches(/^[a-zA-Z\s'-]+$/, 'First name contains invalid characters'),
     lastName: Yup.string()
       .required('Last name is required')
       .min(2, 'Last name must be at least 2 characters')
       .max(50, 'Last name is too long')
-      .matches(/^[a-zA-Z\s\'-]+$/, 'Last name contains invalid characters'),
+      .matches(/^[a-zA-Z\s'-]+$/, 'Last name contains invalid characters'),
     email: Yup.string()
       .email('Please enter a valid email address')
       .required('Email address is required')
@@ -126,11 +122,11 @@ const SignUpScreen = ({ navigation }) => {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'bottom', 'left', 'right']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={['top', 'bottom', 'left', 'right']}
+    >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -138,19 +134,10 @@ const SignUpScreen = ({ navigation }) => {
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backButton}
-            >
-              <MaterialCommunityIcons
-                name="arrow-left"
-                size={24}
-                color={theme.colors.text.primary}
-              />
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
             </TouchableOpacity>
-            <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-              Create Account
-            </Text>
+            <Text style={[styles.title, { color: theme.colors.text.primary }]}>Create Account</Text>
             <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
               Join Adera and start delivering
             </Text>
@@ -175,9 +162,7 @@ const SignUpScreen = ({ navigation }) => {
                 <>
                   {/* Role Selection */}
                   <View style={styles.roleSection}>
-                    <Text style={[styles.sectionLabel, { color: theme.colors.text.primary }]}>
-                      I want to join as:
-                    </Text>
+                    <Text style={[styles.sectionLabel, { color: theme.colors.text.primary }]}>I want to join as:</Text>
                     <View style={styles.roleOptions}>
                       {ROLE_OPTIONS.map((option) => (
                         <TouchableOpacity
@@ -186,10 +171,7 @@ const SignUpScreen = ({ navigation }) => {
                             styles.roleCard,
                             {
                               backgroundColor: theme.colors.surface,
-                              borderColor:
-                                values.role === option.value
-                                  ? theme.colors.primary
-                                  : theme.colors.outline,
+                              borderColor: values.role === option.value ? theme.colors.primary : theme.colors.outline,
                               borderWidth: values.role === option.value ? 2 : 1,
                             },
                           ]}
@@ -209,21 +191,14 @@ const SignUpScreen = ({ navigation }) => {
                             <MaterialCommunityIcons
                               name={option.icon}
                               size={24}
-                              color={
-                                values.role === option.value
-                                  ? theme.colors.primary
-                                  : theme.colors.text.secondary
-                              }
+                              color={values.role === option.value ? theme.colors.primary : theme.colors.text.secondary}
                             />
                           </View>
                           <Text
                             style={[
                               styles.roleLabel,
                               {
-                                color:
-                                  values.role === option.value
-                                    ? theme.colors.primary
-                                    : theme.colors.text.primary,
+                                color: values.role === option.value ? theme.colors.primary : theme.colors.text.primary,
                               },
                             ]}
                           >
@@ -299,10 +274,7 @@ const SignUpScreen = ({ navigation }) => {
                     autoComplete="password-new"
                     textContentType="newPassword"
                     right={
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        style={styles.eyeIcon}
-                      >
+                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
                         <MaterialCommunityIcons
                           name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                           size={20}
@@ -351,13 +323,9 @@ const SignUpScreen = ({ navigation }) => {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: theme.colors.text.secondary }]}>
-              Already have an account?{' '}
-            </Text>
+            <Text style={[styles.footerText, { color: theme.colors.text.secondary }]}>Already have an account? </Text>
             <TouchableOpacity onPress={handleLogin}>
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]}>
-                Sign In
-              </Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
