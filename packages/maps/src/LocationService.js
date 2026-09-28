@@ -242,3 +242,43 @@ export default {
   watchPosition,
   DEFAULT_REGION,
 };
+
+/**
+ * parsePoint — normalize a Postgres `POINT` column value into a
+ * { latitude, longitude } object.
+ *
+ * Depending on the driver, POINT arrives as:
+ *   - a string  "(38.7578,9.005401)"   (lng,lat — PostGIS order!)
+ *   - an object { x: 38.7578, y: 9.005401 }
+ *   - null
+ * Accepts those plus already-parsed { latitude, longitude } objects so callers
+ * can pipe any location-ish value through safely.
+ */
+export function parsePoint(point) {
+  if (!point) return null;
+
+  // Already normalized
+  if (typeof point === 'object' && !Array.isArray(point)) {
+    if (Number.isFinite(point.latitude) && Number.isFinite(point.longitude)) {
+      return { latitude: point.latitude, longitude: point.longitude };
+    }
+    if (Number.isFinite(point.x) && Number.isFinite(point.y)) {
+      return { latitude: point.y, longitude: point.x };
+    }
+    return null;
+  }
+
+  // String form: "(lng,lat)" — PostGIS text representation is (x,y) = (lng,lat)
+  if (typeof point === 'string') {
+    const m = point.match(/\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)/);
+    if (m) {
+      const x = parseFloat(m[1]);
+      const y = parseFloat(m[2]);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        return { latitude: y, longitude: x };
+      }
+    }
+  }
+
+  return null;
+}

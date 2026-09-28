@@ -73,6 +73,7 @@ const OrderHistoryScreen = ({ navigation }) => {
         id: o.id,
         orderNumber: o.order_number,
         status: o.status,
+        parcelId: o.parcel_id || null,
         subtotal: Number(o.subtotal) || 0,
         deliveryFee: Number(o.delivery_fee) || 0,
         discount: Number(o.discount_amount) || 0,
@@ -209,6 +210,17 @@ const OrderHistoryScreen = ({ navigation }) => {
           <Text style={[styles.totalLabel, { color: theme.colors.text.secondary }]}>Total</Text>
           <Text style={[styles.totalValue, { color: theme.colors.primary }]}>{formatCurrency(item.total)}</Text>
         </View>
+
+        {/* Track delivery — only for orders handed to Adera */}
+        {item.parcelId && (
+          <TouchableOpacity
+            style={[styles.trackBtn, { backgroundColor: theme.colors.primaryContainer }]}
+            onPress={() => navigation?.navigate?.('orderTracking', { orderId: item.id, parcelId: item.parcelId })}
+          >
+            <MaterialCommunityIcons name="map-marker-path" size={18} color={theme.colors.primary} />
+            <Text style={[styles.trackBtnText, { color: theme.colors.primary }]}>Track delivery</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -387,6 +399,16 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   browseBtn: { marginTop: 16, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
   browseBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  trackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  trackBtnText: { fontSize: 14, fontWeight: '700' },
 });
 
 export default OrderHistoryScreen;

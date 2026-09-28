@@ -26,6 +26,7 @@ import ProductDetailScreen from './screens/ProductDetailScreen';
 import ShoppingCartScreen from './screens/ShoppingCartScreen';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import CheckoutScreen from './screens/CheckoutScreen';
+import OrderTrackingScreen from './screens/OrderTrackingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +40,7 @@ function ShopNavigator({ onLoginRequest }) {
       <Stack.Screen name="cart" component={ShoppingCartScreen} />
       <Stack.Screen name="checkout" component={CheckoutScreen} />
       <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+      <Stack.Screen name="orderTracking" component={OrderTrackingScreen} />
     </Stack.Navigator>
   );
 }
@@ -58,6 +60,7 @@ function AuthShopNavigator() {
       <Stack.Screen name="cart" component={ShoppingCartScreen} />
       <Stack.Screen name="checkout" component={CheckoutScreen} />
       <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+      <Stack.Screen name="orderTracking" component={OrderTrackingScreen} />
     </Stack.Navigator>
   );
 }

@@ -104,6 +104,29 @@ export default function CheckoutScreen({ navigation, route }) {
 
                     if (paymentResult?.checkoutUrl) {
                         await openChapaCheckout(paymentResult.checkoutUrl);
+                        // Verify SERVER-SIDE via the chapa-verify Edge Function.
+                        // Marks the order paid idempotently with the secret key.
+                        const { data: verifyResult, error: verifyError } = await supabase.functions.invoke(
+                            'chapa-verify',
+                            { body: { tx_ref: paymentResult.txRef || txRef } }
+                        );
+                        if (verifyError) {
+                            console.error('Chapa verify error:', verifyError);
+                            Alert.alert(
+                                'Order Created, Payment Verifying',
+                                'Your order was placed. Payment verification is in progress — you will be notified once confirmed.',
+                                [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]
+                            );
+                            return;
+                        }
+                        if (!verifyResult?.success) {
+                            Alert.alert(
+                                'Payment Not Completed',
+                                verifyResult?.error || 'The payment was not completed. You can retry from order details.',
+                                [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]
+                            );
+                            return;
+                        }
                     }
                 } catch (paymentError) {
                     console.error('Chapa payment error:', paymentError);

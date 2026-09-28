@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@adera/ui';
 
@@ -34,6 +34,7 @@ const DEFAULT_COORDS = {
 const PartnerSelectionMap = ({ partners = [], selectedPartner, onSelect, userLocation, height = 320 }) => {
   const theme = useTheme();
   const [maps] = useState(getNativeMaps);
+  const mapRef = useRef(null);
   const RealMap = maps?.default;
   const RealMarker = maps?.Marker;
   const RealCircle = maps?.Circle;
@@ -45,6 +46,24 @@ const PartnerSelectionMap = ({ partners = [], selectedPartner, onSelect, userLoc
     longitude: center.longitude,
     latitudeDelta: 0.18,
     longitudeDelta: 0.18,
+  };
+
+  /**
+   * Fit the map to the user + all partner pins once the native map is ready,
+   * so no pin can ever sit outside the viewport.
+   */
+  const handleMapReady = () => {
+    if (!RealMap || !mapRef.current?.fitToCoordinates) return;
+    const coords = partners
+      .filter((p) => p.location)
+      .map((p) => p.location);
+    if (userLocation) coords.push(userLocation);
+    if (coords.length > 1) {
+      mapRef.current.fitToCoordinates(coords, {
+        edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
+        animated: true,
+      });
+    }
   };
 
   if (!RealMap) {
@@ -65,10 +84,13 @@ const PartnerSelectionMap = ({ partners = [], selectedPartner, onSelect, userLoc
   return (
     <View style={[styles.container, { height }]}>
       <RealMap
+        ref={mapRef}
         style={StyleSheet.absoluteFill}
         initialRegion={initialRegion}
-        showsUserLocation={false}
+        showsUserLocation={Boolean(userLocation)}
+        showsMyLocationButton={false}
         showsCompass={false}
+        onMapReady={handleMapReady}
       >
         {userLocation && RealCircle && (
           <RealCircle
@@ -87,6 +109,13 @@ const PartnerSelectionMap = ({ partners = [], selectedPartner, onSelect, userLoc
               coordinate={partner.location}
               title={partner.name}
               description={partner.address || ''}
+              pinColor={
+                selectedPartner?.id === partner.id
+                  ? theme.colors.success || '#4CAF50'
+                  : partner.isOpen
+                  ? theme.colors.primary
+                  : theme.colors.error || '#F44336'
+              }
             >
               {RealCallout && (
                 <RealCallout tooltip onPress={() => onSelect?.(partner)}>

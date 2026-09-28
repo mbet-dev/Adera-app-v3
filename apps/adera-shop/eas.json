@@ -3,6 +3,19 @@
     "version": ">= 15.0.0",
     "appVersionSource": "remote"
   },
+  "update": {
+    "channels": {
+      "development": {
+        "distribution": "store"
+      },
+      "preview": {
+        "distribution": "store"
+      },
+      "production": {
+        "distribution": "store"
+      }
+    }
+  },
   "build": {
     "development": {
       "developmentClient": true,

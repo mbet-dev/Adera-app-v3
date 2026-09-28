@@ -63,8 +63,36 @@
 - [x] Security audit doc (docs/security-audit.md)
 - [x] Development plan v2 — Telebirr/ArifPay dropped, Chapa-only
 
+### ✅ Phase 8 Complete (2026-09-28)
+- [x] Chapa verify Edge Function (supabase/functions/chapa-verify) — server-side secret,
+      idempotent payment verification; client callback screens now verify via the function
+- [x] Map rendering fixed end-to-end (web + native):
+      • Root cause #1: Leaflet CSS never imported — injected as singleton on web
+      • Root cause #2: Metro bundles react-native-maps into web builds (lazy require is
+        NOT enough) — MapView split into MapView.web.js (react-leaflet) / MapView.native.js
+      • Root cause #3: PostgREST POINT "(lon,lat)" strings parsed with parseFloat → NaN →
+        all 30 partner pins collapsed onto default coordinate — shared parsePoint() added
+      • Branded teardrop pins (rotated −45°, tip at coordinate), pulsing user marker,
+        fitBounds on both platforms, status-colored pinColor on native
+      • WebMapView rebuilt from OSM iframe fake to real Leaflet map (PartnerDetailModal)
+      • Driver RouteMap: real screen with assigned parcel stops + driver location; new
+        Route tab in DriverNavigator (was unreachable placeholder)
+      • Shop: new OrderTrackingScreen — status timeline + map (delivery + partner pins),
+        wired as orderTracking route with Track delivery button in Order History
+- [x] Role screens completed (mocks → live Supabase data):
+      • Partner ParcelManagement: parcels at this partner's drop-off/pickup, pull-to-refresh
+      • Staff ParcelOversight: stale/expiring parcels with issue classification
+      • Staff Analytics: live platform metrics (parcels 24h, in-transit, orders, revenue)
+      • Staff Support: notifications-backed ticket queue + broadcast composer to all users
+- [x] RLS: staff broadcast policies (supabase/12-staff-broadcast-policy.sql) + docs/rls-matrix.md
+- [x] EAS: OTA updates enabled (updates.url + runtimeVersion appVersion policy) on both apps,
+      location permissions added (iOS infoPlist + Android), update channels in eas.json
+- [x] docs/release-runbook.md — build/submit procedures, OTA, full rollback plan per layer
+
 ### ⬜ Not Started
-- [ ] Phase 8: Deployment preparation (RLS matrix review, EAS builds, SMS alerts, release docs)
+- [ ] Apply supabase migrations 11 + 12 to the live database
+- [ ] Set CHAPA_SECRET_KEY Edge Function secret; switch Chapa keys to production
+- [ ] EAS credentials setup + first store builds (Apple/Google accounts)
 
 ## Feature Matrix
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useTheme, LoadingScreen, Button } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { usePayment } from '@adera/payments';
+import { supabase } from '@adera/auth';
 
 /**
  * PaymentCallbackScreen
@@ -13,7 +13,6 @@ import { usePayment } from '@adera/payments';
  */
 export default function PaymentCallbackScreen({ navigation, route }) {
   const theme = useTheme();
-  const { verifyPayment } = usePayment();
   const [status, setStatus] = useState('verifying'); // verifying | success | failed
   const [details, setDetails] = useState(null);
 
@@ -32,21 +31,29 @@ export default function PaymentCallbackScreen({ navigation, route }) {
           return;
         }
 
-        const method = route?.params?.paymentMethod || 'chapa';
-        const result = await verifyPayment({ method, txRef });
+        // Verify SERVER-SIDE via the chapa-verify Edge Function.
+        // The secret key never touches the client; the function also marks
+        // the parcel/order paid idempotently and validates the amount.
+        const { data: result, error: fnError } = await supabase.functions.invoke('chapa-verify', {
+          body: { tx_ref: txRef },
+        });
 
-        if (result?.status === 'success' || result?.status === 'completed') {
+        if (fnError) {
+          throw new Error(fnError.message || 'Verification service error.');
+        }
+
+        if (result?.success) {
           setStatus('success');
           setDetails({
-            txRef: result.txRef || txRef,
+            txRef: result.tx_ref || txRef,
             amount: result.amount,
             currency: result.currency || 'ETB',
-            paymentMethod: result.paymentMethod,
+            paymentMethod: result.method,
           });
         } else {
           setStatus('failed');
           setDetails({
-            message: result?.statusMessage || 'Payment could not be verified.',
+            message: result?.error || 'Payment could not be verified.',
             txRef,
           });
         }

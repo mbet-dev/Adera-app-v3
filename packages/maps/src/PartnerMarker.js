@@ -17,12 +17,19 @@ const PartnerMarker = ({ partner, pinColor, onPress }) => {
       description={partner.address || ''}
       onPress={onPress}
     >
-      <View style={[styles.callout, { backgroundColor: '#fff' }]}>
+      <View
+        style={[
+          styles.callout,
+          { backgroundColor: '#fff', transform: [{ rotate: '-45deg' }] },
+        ]}
+      >
         {partner.heroImage && <View style={styles.calloutImagePlaceholder} />}
-        <Text style={styles.calloutTitle}>{partner.name}</Text>
-        <Text style={styles.calloutSubtitle}>{partner.address || 'No address available'}</Text>
+        <Text style={[styles.calloutTitle, { transform: [{ rotate: '45deg' }] }]}>{partner.name}</Text>
+        <Text style={[styles.calloutSubtitle, { transform: [{ rotate: '45deg' }] }]}>{partner.address || 'No address available'}</Text>
         {typeof partner.distance === 'number' && (
-          <Text style={styles.calloutMeta}>{partner.distance.toFixed(1)} km away</Text>
+          <Text style={[styles.calloutMeta, { transform: [{ rotate: '45deg' }] }]}>
+            {partner.distance.toFixed(1)} km away
+          </Text>
         )}
       </View>
     </Marker>
