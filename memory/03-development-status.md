@@ -90,9 +90,14 @@
 - [x] docs/release-runbook.md — build/submit procedures, OTA, full rollback plan per layer
 
 ### ⬜ Not Started
-- [ ] Apply supabase migrations 11 + 12 to the live database
+- [ ] Apply supabase migrations 10, 11, 12 to the live database (wallet + notifications + broadcast policies)
 - [ ] Set CHAPA_SECRET_KEY Edge Function secret; switch Chapa keys to production
 - [ ] EAS credentials setup + first store builds (Apple/Google accounts)
+- [ ] SMS integration for recipient alerts
+- [ ] Wallet UI flow (top-up, transaction history, withdrawal)
+- [ ] Error retry patterns for network failures
+- [ ] Responsive layout audit (tablet/desktop)
+- [ ] npm audit CI gating after advisory triage
 
 ## Feature Matrix
 

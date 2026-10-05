@@ -53,10 +53,16 @@
 - ⬜ Flip `npm audit` CI job to gating after advisory triage
 - ⬜ Error retry patterns + responsive layout audit (tablet/desktop)
 
-## Phase 8: Deployment Preparation ⬜
+## Phase 8: Deployment Preparation ✅ COMPLETE (docs)
 **Objective:** ship it
-- End-to-end Supabase RLS matrix review (authenticated vs anon on every table)
-- SMS recipient alerts (via Chapa-adjacent or local SMS aggregator — evaluate cost)
-- EAS Build config finalization for iOS/Android; app metadata + screenshots
-- Production env setup (secrets rotation, Sentry release tagging)
-- Release documentation + rollback runbook
+- ✅ End-to-end Supabase RLS matrix review (docs/rls-matrix.md)
+- ✅ Release documentation + rollback runbook (docs/release-runbook.md)
+- ⬜ SMS recipient alerts (via Chapa-adjacent or local SMS aggregator — evaluate cost)
+- ⬜ EAS Build config finalization for iOS/Android; app metadata + screenshots
+- ⬜ Production env setup (secrets rotation, Sentry release tagging)
+- ⬜ Deploy wallet system migration (supabase/10-wallet-system-deployment.sql)
+- ⬜ Set CHAPA_SECRET_KEY Edge Function secret; switch Chapa keys to production
+- ⬜ EAS credentials setup + first store builds (Apple/Google accounts)
+- ⬜ Error retry patterns for network failures
+- ⬜ Responsive layout audit (tablet/desktop)
+- ⬜ npm audit CI gating after advisory triage
