@@ -1,23 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
-  Share,
-  ActivityIndicator,
-} from 'react-native';
-import { useTheme } from '@adera/ui';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Alert, Share } from 'react-native';
+import { useTheme, ProductDetailSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import useCartStore from '../store/cartStore';
 import useReviews from '../hooks/useReviews';
 import useOfflineCache from '../hooks/useOfflineCache';
 import WriteReviewModal from '../components/WriteReviewModal';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -46,21 +36,32 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const inCartCount = cartItems.find((i) => i.id === productId)?.quantity || 0;
   const { fetchProductWithCache } = useOfflineCache();
 
-  const { reviews, summary: reviewSummary, userReview, submitting: reviewSubmitting, submitReview } = useReviews(productId);
+  const {
+    reviews,
+    summary: reviewSummary,
+    userReview,
+    submitting: reviewSubmitting,
+    submitReview,
+  } = useReviews(productId);
 
   const fetchProduct = useCallback(async () => {
-    if (!productId) { setLoading(false); return; }
+    if (!productId) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data, isFromCache } = await fetchProductWithCache(productId, async (id) => {
         const { data, error } = await supabase
           .from('products')
-          .select(`
+          .select(
+            `
             *,
             shops (
               id, name, description, category, logo_url, address, phone,
               average_rating, total_reviews, is_verified
             )
-          `)
+          `
+          )
           .eq('id', id)
           .single();
         if (error) throw error;
@@ -80,30 +81,48 @@ const ProductDetailScreen = ({ navigation, route }) => {
     }
   }, [productId, fetchProductWithCache]);
 
-  useEffect(() => { fetchProduct(); }, [fetchProduct]);
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   const handleAddToCart = () => {
     if (!product) return;
-    addItem({
-      id: product.id, name: product.name, price: product.price,
-      images: product.images, shop_id: product.shop_id,
-      shop_name: shop?.name, stock_quantity: product.stock_quantity,
-    }, quantity);
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        images: product.images,
+        shop_id: product.shop_id,
+        shop_name: shop?.name,
+        stock_quantity: product.stock_quantity,
+      },
+      quantity
+    );
     Alert.alert('Added to Cart', `${quantity}× ${product.name} added to your cart.`);
   };
 
-  const handleBuyNow = () => { handleAddToCart(); navigation?.navigate?.('cart'); };
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigation?.navigate?.('cart');
+  };
 
   const handleShare = async () => {
     if (!product) return;
-    try { await Share.share({ message: `Check out "${product.name}" on Adera Shop for ${Number(product.price).toFixed(2)} ETB`, title: product.name }); } catch {}
+    try {
+      await Share.share({
+        message: `Check out "${product.name}" on Adera Shop for ${Number(product.price).toFixed(2)} ETB`,
+        title: product.name,
+      });
+    } catch {}
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={{ marginTop: 12, color: theme.colors.text.secondary }}>Loading product…</Text>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+          <ProductDetailSkeleton />
+        </View>
       </View>
     );
   }
@@ -129,25 +148,42 @@ const ProductDetailScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]} numberOfLines={1}>{product.name}</Text>
-        <TouchableOpacity onPress={handleShare} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="share-variant" size={22} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]} numberOfLines={1}>
+            {product.name}
+          </Text>
+          <TouchableOpacity onPress={handleShare} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="share-variant" size={22} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaHeader>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Image Gallery */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: images[selectedImageIndex] }} style={[styles.mainImage, { backgroundColor: theme.colors.surfaceVariant }]} resizeMode="cover" />
+          <Image
+            source={{ uri: images[selectedImageIndex] }}
+            style={[styles.mainImage, { backgroundColor: theme.colors.surfaceVariant }]}
+            resizeMode="cover"
+          />
           {images.length > 1 && (
             <View style={styles.thumbnailRow}>
               {images.slice(0, 5).map((uri, idx) => (
                 <TouchableOpacity key={idx} onPress={() => setSelectedImageIndex(idx)}>
-                  <Image source={{ uri }} style={[styles.thumbnail, { borderColor: selectedImageIndex === idx ? theme.colors.primary : theme.colors.outlineVariant, opacity: selectedImageIndex === idx ? 1 : 0.6 }]} />
+                  <Image
+                    source={{ uri }}
+                    style={[
+                      styles.thumbnail,
+                      {
+                        borderColor: selectedImageIndex === idx ? theme.colors.primary : theme.colors.outlineVariant,
+                        opacity: selectedImageIndex === idx ? 1 : 0.6,
+                      },
+                    ]}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -160,7 +196,9 @@ const ProductDetailScreen = ({ navigation, route }) => {
             <Text style={[styles.price, { color: theme.colors.primary }]}>{Number(product.price).toFixed(2)} ETB</Text>
             {hasDiscount && (
               <>
-                <Text style={[styles.originalPrice, { color: theme.colors.text.secondary }]}>{Number(product.original_price).toFixed(2)} ETB</Text>
+                <Text style={[styles.originalPrice, { color: theme.colors.text.secondary }]}>
+                  {Number(product.original_price).toFixed(2)} ETB
+                </Text>
                 <View style={[styles.discountBadge, { backgroundColor: isDark ? '#FF525233' : '#FFEBEE' }]}>
                   <Text style={[styles.discountText, { color: '#F44336' }]}>-{discountPercent}%</Text>
                 </View>
@@ -168,21 +206,31 @@ const ProductDetailScreen = ({ navigation, route }) => {
             )}
           </View>
           <Text style={[styles.productName, { color: theme.colors.text.primary }]}>{product.name}</Text>
-          {product.category && <Text style={[styles.category, { color: theme.colors.text.secondary }]}>{product.category}</Text>}
+          {product.category && (
+            <Text style={[styles.category, { color: theme.colors.text.secondary }]}>{product.category}</Text>
+          )}
 
           {/* Product Rating Summary */}
           {reviewSummary.total > 0 && (
             <View style={styles.ratingSummary}>
               <MaterialCommunityIcons name="star" size={18} color="#FFB300" />
               <Text style={[styles.ratingValue, { color: theme.colors.text.primary }]}>{reviewSummary.average}</Text>
-              <Text style={[styles.ratingCount, { color: theme.colors.text.secondary }]}>({reviewSummary.total} reviews)</Text>
+              <Text style={[styles.ratingCount, { color: theme.colors.text.secondary }]}>
+                ({reviewSummary.total} reviews)
+              </Text>
             </View>
           )}
 
           {/* Stock Status */}
           <View style={styles.stockRow}>
-            <MaterialCommunityIcons name={product.stock_quantity > 0 ? 'check-circle' : 'close-circle'} size={16} color={product.stock_quantity > 0 ? '#4CAF50' : '#F44336'} />
-            <Text style={{ color: product.stock_quantity > 0 ? '#4CAF50' : '#F44336', fontSize: 13, fontWeight: '600' }}>
+            <MaterialCommunityIcons
+              name={product.stock_quantity > 0 ? 'check-circle' : 'close-circle'}
+              size={16}
+              color={product.stock_quantity > 0 ? '#4CAF50' : '#F44336'}
+            />
+            <Text
+              style={{ color: product.stock_quantity > 0 ? '#4CAF50' : '#F44336', fontSize: 13, fontWeight: '600' }}
+            >
               {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity} available)` : 'Out of Stock'}
             </Text>
           </View>
@@ -199,7 +247,13 @@ const ProductDetailScreen = ({ navigation, route }) => {
           {product.tags?.length > 0 && (
             <View style={styles.tagsRow}>
               {product.tags.map((tag, idx) => (
-                <View key={idx} style={[styles.tag, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}>
+                <View
+                  key={idx}
+                  style={[
+                    styles.tag,
+                    { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
+                  ]}
+                >
                   <Text style={[styles.tagText, { color: theme.colors.text.secondary }]}>{tag}</Text>
                 </View>
               ))}
@@ -210,21 +264,32 @@ const ProductDetailScreen = ({ navigation, route }) => {
         {/* Shop Info */}
         {shop && (
           <TouchableOpacity
-            style={[styles.shopCard, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant }]}
+            style={[
+              styles.shopCard,
+              { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant },
+            ]}
             onPress={() => Alert.alert('Shop', 'Shop detail page coming soon')}
           >
             <View style={styles.shopHeader}>
               {shop.logo_url ? (
                 <Image source={{ uri: shop.logo_url }} style={styles.shopLogo} />
               ) : (
-                <View style={[styles.shopLogo, styles.shopLogoPlaceholder, { backgroundColor: theme.colors.primaryContainer }]}>
+                <View
+                  style={[
+                    styles.shopLogo,
+                    styles.shopLogoPlaceholder,
+                    { backgroundColor: theme.colors.primaryContainer },
+                  ]}
+                >
                   <MaterialCommunityIcons name="storefront" size={24} color={theme.colors.primary} />
                 </View>
               )}
               <View style={styles.shopMeta}>
                 <View style={styles.shopNameRow}>
                   <Text style={[styles.shopName, { color: theme.colors.text.primary }]}>{shop.name}</Text>
-                  {shop.is_verified && <MaterialCommunityIcons name="check-decagram" size={16} color={theme.colors.primary} />}
+                  {shop.is_verified && (
+                    <MaterialCommunityIcons name="check-decagram" size={16} color={theme.colors.primary} />
+                  )}
                 </View>
                 <Text style={[styles.shopCategory, { color: theme.colors.text.secondary }]}>{shop.category}</Text>
                 {shop.average_rating > 0 && (
@@ -241,7 +306,9 @@ const ProductDetailScreen = ({ navigation, route }) => {
             {shop.address && (
               <View style={styles.shopAddressRow}>
                 <MaterialCommunityIcons name="map-marker-outline" size={14} color={theme.colors.text.secondary} />
-                <Text style={[styles.shopAddress, { color: theme.colors.text.secondary }]} numberOfLines={1}>{shop.address}</Text>
+                <Text style={[styles.shopAddress, { color: theme.colors.text.secondary }]} numberOfLines={1}>
+                  {shop.address}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -264,11 +331,20 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
           {/* Rating Distribution */}
           {reviewSummary.total > 0 && (
-            <View style={[styles.distributionCard, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant }]}>
+            <View
+              style={[
+                styles.distributionCard,
+                { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant },
+              ]}
+            >
               <View style={styles.distLeft}>
-                <Text style={[styles.distBigNumber, { color: theme.colors.text.primary }]}>{reviewSummary.average}</Text>
+                <Text style={[styles.distBigNumber, { color: theme.colors.text.primary }]}>
+                  {reviewSummary.average}
+                </Text>
                 <StarRating rating={Math.round(reviewSummary.average)} size={18} />
-                <Text style={[styles.distTotal, { color: theme.colors.text.secondary }]}>{reviewSummary.total} reviews</Text>
+                <Text style={[styles.distTotal, { color: theme.colors.text.secondary }]}>
+                  {reviewSummary.total} reviews
+                </Text>
               </View>
               <View style={styles.distBars}>
                 {[5, 4, 3, 2, 1].map((star) => {
@@ -293,7 +369,9 @@ const ProductDetailScreen = ({ navigation, route }) => {
           {reviews.length === 0 && !loading ? (
             <View style={[styles.noReviews, { backgroundColor: theme.colors.surfaceContainer }]}>
               <MaterialCommunityIcons name="comment-outline" size={36} color={theme.colors.text.secondary} />
-              <Text style={[styles.noReviewsText, { color: theme.colors.text.secondary }]}>No reviews yet. Be the first!</Text>
+              <Text style={[styles.noReviewsText, { color: theme.colors.text.secondary }]}>
+                No reviews yet. Be the first!
+              </Text>
             </View>
           ) : (
             reviews.map((review) => (
@@ -307,7 +385,11 @@ const ProductDetailScreen = ({ navigation, route }) => {
                   <View style={styles.reviewMeta}>
                     <Text style={[styles.reviewName, { color: theme.colors.text.primary }]}>{review.userName}</Text>
                     <Text style={[styles.reviewDate, { color: theme.colors.text.secondary }]}>
-                      {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(review.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -322,18 +404,35 @@ const ProductDetailScreen = ({ navigation, route }) => {
       </ScrollView>
 
       {/* Bottom Bar */}
-      <View style={[styles.bottomBar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
+      <View
+        style={[
+          styles.bottomBar,
+          { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant },
+        ]}
+      >
         <View style={styles.quantityControl}>
-          <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))} style={[styles.qtyBtn, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <TouchableOpacity
+            onPress={() => setQuantity(Math.max(1, quantity - 1))}
+            style={[styles.qtyBtn, { backgroundColor: theme.colors.surfaceVariant }]}
+          >
             <MaterialCommunityIcons name="minus" size={20} color={theme.colors.text.primary} />
           </TouchableOpacity>
           <Text style={[styles.qtyValue, { color: theme.colors.text.primary }]}>{quantity}</Text>
-          <TouchableOpacity onPress={() => setQuantity(quantity + 1)} style={[styles.qtyBtn, { backgroundColor: theme.colors.primaryContainer }]}>
+          <TouchableOpacity
+            onPress={() => setQuantity(quantity + 1)}
+            style={[styles.qtyBtn, { backgroundColor: theme.colors.primaryContainer }]}
+          >
             <MaterialCommunityIcons name="plus" size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
         <View style={styles.bottomActions}>
-          <TouchableOpacity style={[styles.cartBtn, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]} onPress={handleAddToCart}>
+          <TouchableOpacity
+            style={[
+              styles.cartBtn,
+              { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline },
+            ]}
+            onPress={handleAddToCart}
+          >
             <MaterialCommunityIcons name="cart-plus" size={20} color={theme.colors.text.primary} />
             {inCartCount > 0 && (
               <View style={styles.cartBadge}>
@@ -342,7 +441,10 @@ const ProductDetailScreen = ({ navigation, route }) => {
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.buyBtn, { backgroundColor: theme.colors.primary, opacity: product.stock_quantity > 0 ? 1 : 0.5 }]}
+            style={[
+              styles.buyBtn,
+              { backgroundColor: theme.colors.primary, opacity: product.stock_quantity > 0 ? 1 : 0.5 },
+            ]}
             onPress={handleBuyNow}
             disabled={product.stock_quantity <= 0}
           >
@@ -366,7 +468,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, gap: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center' },
   scrollContent: { paddingBottom: 120 },
@@ -407,7 +509,14 @@ const styles = StyleSheet.create({
   // Reviews
   reviewsSection: { paddingHorizontal: 20, marginTop: 24, gap: 12 },
   reviewsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  writeReviewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  writeReviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
   writeReviewText: { fontSize: 13, fontWeight: '700' },
   distributionCard: { flexDirection: 'row', padding: 16, borderRadius: 14, borderWidth: 1, gap: 20 },
   distLeft: { alignItems: 'center', gap: 4, minWidth: 80 },
@@ -430,13 +539,36 @@ const styles = StyleSheet.create({
   reviewDate: { fontSize: 11 },
   reviewComment: { fontSize: 14, lineHeight: 20 },
   // Bottom bar
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 34, borderTopWidth: 1, gap: 16 },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingBottom: 34,
+    borderTopWidth: 1,
+    gap: 16,
+  },
   quantityControl: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   qtyBtn: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   qtyValue: { fontSize: 18, fontWeight: '700', minWidth: 24, textAlign: 'center' },
   bottomActions: { flex: 1, flexDirection: 'row', gap: 10 },
   cartBtn: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  cartBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#F44336', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  cartBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#F44336',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
   cartBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   buyBtn: { flex: 1, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   buyBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },

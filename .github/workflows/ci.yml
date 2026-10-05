@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main, master]
+  pull_request:
+    branches: [dev, main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Test, Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Unit tests (Jest)
+        run: npm test -- --ci
+
+      - name: Security audit (high+)
+        # '|| true' until transitive advisories are triaged — report now, gate later
+        run: npm audit --audit-level=high || true
+
+  build-ptp-web:
+    name: Build PTP (web)
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Export PTP web bundle
+        run: npx expo export --platform web
+        working-directory: apps/adera-ptp
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_CHAPA_PUBLIC_KEY: ${{ secrets.EXPO_PUBLIC_CHAPA_PUBLIC_KEY }}
+      - name: Upload web bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptp-web-dist
+          path: apps/adera-ptp/dist
+          retention-days: 7
+
+  build-shop-web:
+    name: Build Shop (web)
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Export Shop web bundle
+        run: npx expo export --platform web
+        working-directory: apps/adera-shop
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_CHAPA_PUBLIC_KEY: ${{ secrets.EXPO_PUBLIC_CHAPA_PUBLIC_KEY }}
+      - name: Upload web bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shop-web-dist
+          path: apps/adera-shop/dist
+          retention-days: 7

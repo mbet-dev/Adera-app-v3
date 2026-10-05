@@ -7,13 +7,26 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import { I18nProvider } from '@adera/localization';
+import { PaymentProvider } from '@adera/payments';
+import { initSentry, captureException } from '@adera/utils';
 import Constants from 'expo-constants';
+
+// Initialize Sentry error tracking as early as possible (no-op without EXPO_PUBLIC_SENTRY_DSN)
+initSentry();
+
+function I18nSync({ children }) {
+  const { language } = usePreferences();
+  return <I18nProvider language={language || 'en'}>{children}</I18nProvider>;
+}
 
 // Screens
 import MarketDiscoveryScreen from './screens/MarketDiscoveryScreen';
 import ProductDetailScreen from './screens/ProductDetailScreen';
 import ShoppingCartScreen from './screens/ShoppingCartScreen';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
+import CheckoutScreen from './screens/CheckoutScreen';
+import OrderTrackingScreen from './screens/OrderTrackingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,7 +38,9 @@ function ShopNavigator({ onLoginRequest }) {
       </Stack.Screen>
       <Stack.Screen name="productDetail" component={ProductDetailScreen} />
       <Stack.Screen name="cart" component={ShoppingCartScreen} />
+      <Stack.Screen name="checkout" component={CheckoutScreen} />
       <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+      <Stack.Screen name="orderTracking" component={OrderTrackingScreen} />
     </Stack.Navigator>
   );
 }
@@ -43,7 +58,9 @@ function AuthShopNavigator() {
       </Stack.Screen>
       <Stack.Screen name="productDetail" component={ProductDetailScreen} />
       <Stack.Screen name="cart" component={ShoppingCartScreen} />
+      <Stack.Screen name="checkout" component={CheckoutScreen} />
       <Stack.Screen name="orderHistory" component={OrderHistoryScreen} />
+      <Stack.Screen name="orderTracking" component={OrderTrackingScreen} />
     </Stack.Navigator>
   );
 }
@@ -146,14 +163,19 @@ export default function App() {
     return (
       <ThemeProvider forceLightMode={false} initialMode={themeMode}>
         <AuthProvider>
+          <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
-            <ErrorBoundary fallbackMessage="Adera Shop needs to restart.">
+            <ErrorBoundary
+              fallbackMessage="Adera Shop needs to restart."
+              onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
+            >
               <View style={styles.container}>
                 <StatusBar style="auto" />
                 <AppContent />
               </View>
             </ErrorBoundary>
           </NavigationContainer>
+          </PaymentProvider>
         </AuthProvider>
       </ThemeProvider>
     );
@@ -162,7 +184,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PreferencesProvider>
-        <AppWithTheme />
+        <I18nSync>
+          <AppWithTheme />
+        </I18nSync>
       </PreferencesProvider>
     </SafeAreaProvider>
   );

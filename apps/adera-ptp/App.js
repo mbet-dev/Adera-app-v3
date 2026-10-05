@@ -7,12 +7,24 @@ import * as Linking from 'expo-linking';
 import { ThemeProvider, OnboardingScreen, AppSelectorScreen, LoadingScreen, MarketDiscoveryScreen, GatewayScreen, ErrorBoundary } from '@adera/ui';
 import { AuthProvider, useAuth } from '@adera/auth';
 import { PreferencesProvider, usePreferences } from '@adera/preferences';
+import { I18nProvider } from '@adera/localization';
+import { PaymentProvider } from '@adera/payments';
+import { registerForPushNotifications, savePushTokenToSupabase, setupNotificationListeners, initSentry, captureException } from '@adera/utils';
 import AppNavigator from './src/navigation/AppNavigator';
 import ShopNavigator from './src/navigation/ShopNavigator';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { AppFlowProvider } from './src/context/AppFlowContext';
 import ThemelessLoadingScreen from './src/ThemelessLoadingScreen';
 import Constants from 'expo-constants';
+
+// Initialize Sentry error tracking as early as possible (no-op without EXPO_PUBLIC_SENTRY_DSN)
+initSentry();
+
+function I18nSync({ children }) {
+  const { language } = usePreferences();
+  // Pass language as controlled prop so I18nProvider stays in sync with PreferencesProvider
+  return <I18nProvider language={language || 'en'}>{children}</I18nProvider>;
+}
 
 function AppContent() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
@@ -64,6 +76,40 @@ function AppContent() {
     setShowAppSelector(false);
     // Stay on selectedApp='shop' so after auth we route to ShopNavigator
   };
+
+  // Register for push notifications when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let notificationListeners = null;
+
+    const setupNotifications = async () => {
+      const token = await registerForPushNotifications();
+      if (token) {
+        await savePushTokenToSupabase(token);
+      }
+
+      notificationListeners = setupNotificationListeners({
+        onReceive: (notification) => {
+          console.log('[App] Foreground notification:', notification.request.content.title);
+        },
+        onTap: (notification) => {
+          const data = notification.request.content.data;
+          console.log('[App] Notification tapped:', data);
+          // Deep link based on notification type
+          if (data?.tracking_id) {
+            // Could navigate to track screen
+          }
+        },
+      });
+    };
+
+    setupNotifications();
+
+    return () => {
+      notificationListeners?.remove();
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && !wasAuthenticated) {
@@ -180,14 +226,19 @@ export default function App() {
     return (
       <ThemeProvider forceLightMode={false} initialMode={themeMode}>
         <AuthProvider>
+          <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
-            <ErrorBoundary fallbackMessage="Adera needs to restart.">
+            <ErrorBoundary
+              fallbackMessage="Adera needs to restart."
+              onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
+            >
               <View style={styles.container}>
                 <StatusBar style="auto" />
                 <AppContent />
               </View>
             </ErrorBoundary>
           </NavigationContainer>
+          </PaymentProvider>
         </AuthProvider>
       </ThemeProvider>
     );
@@ -196,7 +247,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PreferencesProvider>
-        <AppWithTheme />
+        <I18nSync>
+          <AppWithTheme />
+        </I18nSync>
       </PreferencesProvider>
     </SafeAreaProvider>
   );

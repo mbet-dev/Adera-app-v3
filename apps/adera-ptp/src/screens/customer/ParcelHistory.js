@@ -10,7 +10,7 @@ import {
   Share,
   Alert,
 } from 'react-native';
-import { SafeArea, Card, StatusBadge, TextInput, useTheme } from '@adera/ui';
+import { SafeArea, Card, StatusBadge, TextInput, useTheme, ParcelListSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useParcelHistory from '../../hooks/useParcelHistory';
 
@@ -53,7 +53,7 @@ const ParcelHistory = ({ navigation }) => {
       { id: 'delivered', label: 'Delivered', icon: 'check-circle', tint: '#4CAF50', count: summary.delivered },
       { id: 'cancelled', label: 'Cancelled', icon: 'close-circle', tint: '#F44336', count: summary.cancelled },
     ],
-    [summary, theme.colors.primary],
+    [summary, theme.colors.primary]
   );
 
   const sections = useMemo(() => {
@@ -86,7 +86,7 @@ const ParcelHistory = ({ navigation }) => {
     (parcel) => {
       navigation?.navigate?.('track', { trackingId: parcel.trackingId });
     },
-    [navigation],
+    [navigation]
   );
 
   const renderHero = () => {
@@ -154,10 +154,18 @@ const ParcelHistory = ({ navigation }) => {
               <MaterialCommunityIcons name={item.icon} size={18} color={isActive ? '#FFF' : item.tint} />
             </View>
             <View style={styles.filterChipLabel}>
-              <Text style={[styles.filterLabel, { color: isActive ? '#FFF' : theme.colors.text.primary }]} numberOfLines={1}>
+              <Text
+                style={[styles.filterLabel, { color: isActive ? '#FFF' : theme.colors.text.primary }]}
+                numberOfLines={1}
+              >
                 {item.label}
               </Text>
-              <Text style={[styles.filterBadgeText, { color: isActive ? 'rgba(255,255,255,0.7)' : theme.colors.text.secondary }]}>
+              <Text
+                style={[
+                  styles.filterBadgeText,
+                  { color: isActive ? 'rgba(255,255,255,0.7)' : theme.colors.text.secondary },
+                ]}
+              >
                 {item.count} items
               </Text>
             </View>
@@ -201,7 +209,9 @@ const ParcelHistory = ({ navigation }) => {
 
         <View style={styles.parcelFooter}>
           <View style={styles.parcelStatus}>
-            <View style={[styles.statusIconWrap, { backgroundColor: isDark ? `${status.color}22` : `${status.color}15` }]}>
+            <View
+              style={[styles.statusIconWrap, { backgroundColor: isDark ? `${status.color}22` : `${status.color}15` }]}
+            >
               <MaterialCommunityIcons name={status.icon} size={18} color={status.color} />
             </View>
             <View>
@@ -236,17 +246,22 @@ const ParcelHistory = ({ navigation }) => {
     <Text style={[styles.sectionHeader, { color: theme.colors.text.secondary }]}>{section.title}</Text>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <MaterialCommunityIcons name="package-variant-closed" size={72} color={theme.colors.text.secondary} />
-      <Text style={[styles.emptyTitle, { color: theme.colors.text.primary }]}>
-        {loading ? 'Loading parcels…' : 'No parcels match your filters'}
-      </Text>
-      <Text style={[styles.emptySubtitle, { color: theme.colors.text.secondary }]}>
-        {loading ? 'Fetching your delivery history' : 'Try adjusting the filter or searching another tracking code.'}
-      </Text>
-    </View>
-  );
+  const renderEmptyState = () =>
+    loading ? (
+      <View style={{ paddingTop: 8, paddingBottom: 24 }}>
+        <ParcelListSkeleton count={3} />
+      </View>
+    ) : (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons name="package-variant-closed" size={72} color={theme.colors.text.secondary} />
+        <Text style={[styles.emptyTitle, { color: theme.colors.text.primary }]}>
+          {loading ? 'Loading parcels…' : 'No parcels match your filters'}
+        </Text>
+        <Text style={[styles.emptySubtitle, { color: theme.colors.text.secondary }]}>
+          {loading ? 'Fetching your delivery history' : 'Try adjusting the filter or searching another tracking code.'}
+        </Text>
+      </View>
+    );
 
   const ListHeaderComponent = () => (
     <View style={styles.listHeader}>
@@ -265,7 +280,7 @@ const ParcelHistory = ({ navigation }) => {
   );
 
   return (
-    <SafeArea edges={['top']}>
+    <SafeArea edges={['top', 'bottom']} withBottomNav={true}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <SectionList
           sections={sections}
@@ -293,8 +308,8 @@ const ParcelHistory = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { paddingBottom: 120 },
-  listHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 20 },
+  listContent: { paddingBottom: 16 },
+  listHeader: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 20 },
   heroContainer: { flexDirection: 'row', gap: 16 },
   heroCopy: { flex: 1, gap: 6 },
   heroEyebrow: { fontSize: 13, letterSpacing: 0.2, textTransform: 'uppercase' },
@@ -307,7 +322,7 @@ const styles = StyleSheet.create({
   heroMetricRow: { flexDirection: 'row', justifyContent: 'space-between' },
   heroMetricItem: { alignItems: 'flex-start', gap: 4 },
   heroMetricMini: { fontSize: 18, fontWeight: '600' },
-  searchInput: { marginTop: 4 },
+  searchInput: { marginTop: 8 },
   statsRow: { gap: 12, paddingRight: 20 },
   statCard: { width: 150, padding: 16, gap: 10 },
   statIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

@@ -13,6 +13,7 @@ const DriverNavigator = () => {
   const routes = [
     { key: 'dashboard', title: 'Dashboard', focusedIcon: 'home', unfocusedIcon: 'home-outline' },
     { key: 'tasks', title: 'Tasks', focusedIcon: 'format-list-bulleted', unfocusedIcon: 'format-list-bulleted' },
+    { key: 'map', title: 'Route', focusedIcon: 'map', unfocusedIcon: 'map-outline' },
     { key: 'performance', title: 'Performance', focusedIcon: 'chart-line', unfocusedIcon: 'chart-line' },
     { key: 'profile', title: 'Profile', focusedIcon: 'account', unfocusedIcon: 'account-outline' },
   ];
@@ -36,6 +37,7 @@ const DriverNavigator = () => {
   const renderScene = AppBottomNavigation.SceneMap({
     dashboard: DriverDashboard,
     tasks: TaskList,
+    map: RouteMap,
     performance: DriverPerformance,
     profile: DriverProfile,
   });

@@ -5,21 +5,57 @@ import L from 'leaflet';
 
 const DEFAULT_CENTER = [8.9806, 38.7578];
 
-const defaultIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+/**
+ * Branded Adera pin icons built as divIcons — no external marker-image CDN
+ * (unpkg/github marker PNGs were flaky and unbranded). Geometry: rounded
+ * teardrop rotated -45° so the tip sits exactly at the marker coordinate.
+ */
+const buildPartnerIcon = (color, selected = false) => {
+  const size = selected ? 40 : 34;
+  return L.divIcon({
+    className: 'adera-partner-pin',
+    html: `
+      <div style="
+        width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        background:${color};
+        border:2.5px solid #fff;
+        box-shadow:0 3px 8px rgba(0,0,0,.35);
+        display:flex;align-items:center;justify-content:center;
+      ">
+        <span style="transform:rotate(45deg);color:#fff;font-size:${selected ? 18 : 15}px;font-weight:800;line-height:1;">A</span>
+      </div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size + 6],
+  });
+};
 
-const selectedIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  iconRetinaUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+const buildUserIcon = (color) =>
+  L.divIcon({
+    className: 'adera-user-pin',
+    html: `
+      <div style="position:relative;width:26px;height:26px;">
+        <span style="
+          position:absolute;inset:0;border-radius:50%;
+          background:${color};opacity:.35;
+          animation:adera-pulse 1.6s ease-out infinite;
+        "></span>
+        <span style="
+          position:absolute;left:5px;top:5px;width:16px;height:16px;border-radius:50%;
+          background:${color};border:2.5px solid #fff;
+          box-shadow:0 1px 5px rgba(0,0,0,.4);
+        "></span>
+      </div>
+      <style>
+        @keyframes adera-pulse {
+          0% { transform: scale(.6); opacity:.5; }
+          100% { transform: scale(2.2); opacity:0; }
+        }
+      </style>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
 
 const FitBoundsHelper = ({ partners, userLocation }) => {
   const map = useMap();
@@ -82,27 +118,40 @@ const PartnerSelectionMap = ({ partners = [], selectedPartner, onSelect, userLoc
         <FitBoundsHelper partners={partners} userLocation={userLocation} />
 
         {userLocation && (
-          <CircleMarker
-            center={[userLocation.latitude, userLocation.longitude]}
-            radius={8}
-            pathOptions={{
-              color: theme.colors.primary,
-              fillColor: theme.colors.primary,
-              fillOpacity: 0.4,
-            }}
-          />
+          <>
+            <CircleMarker
+              center={[userLocation.latitude, userLocation.longitude]}
+              radius={22}
+              pathOptions={{
+                color: 'transparent',
+                fillColor: theme.colors.primary,
+                fillOpacity: 0.12,
+              }}
+            />
+            <Marker
+              position={[userLocation.latitude, userLocation.longitude]}
+              icon={buildUserIcon('#FF3B30')}
+              zIndexOffset={500}
+            >
+              <Popup>
+                <strong>You are here</strong>
+              </Popup>
+            </Marker>
+          </>
         )}
 
         {partners
           .filter((partner) => partner.location)
           .map((partner) => {
             const statusColor = partner.isOpen ? theme.colors.success : theme.colors.error;
+            const isSelected = selectedPartner?.id === partner.id;
 
             return (
               <Marker
                 key={partner.id}
                 position={[partner.location.latitude, partner.location.longitude]}
-                icon={selectedPartner?.id === partner.id ? selectedIcon : defaultIcon}
+                icon={buildPartnerIcon(isSelected ? theme.colors.success : theme.colors.primary, isSelected)}
+                zIndexOffset={isSelected ? 1000 : 0}
               >
                 <Popup>
                   <div style={{ minWidth: 200 }}>

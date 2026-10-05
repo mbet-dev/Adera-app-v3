@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeArea, Card, TextInput, Button, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { usePayment, openChapaCheckout } from '@adera/payments';
 import PartnerSelectionModal from '../../components/PartnerSelectionModal';
 import { useAuth } from '@adera/auth';
 import * as Yup from 'yup';
@@ -36,7 +37,6 @@ const PACKAGE_TYPES = [
 
 const PAYMENT_METHODS = [
   { id: 'wallet', label: 'Wallet', icon: 'wallet', available: true },
-  { id: 'telebirr', label: 'Telebirr', icon: 'cellphone', available: true },
   { id: 'chapa', label: 'Chapa', icon: 'credit-card', available: true },
   { id: 'cod', label: 'Cash on Dropoff', icon: 'cash', available: true },
 ];
@@ -152,6 +152,7 @@ const CreateParcel = ({ navigation }) => {
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const { userLocation } = usePartners();
+  const { initiatePayment } = usePayment();
 
   const calculatePrice = useCallback(() => {
     if (!packageSize || !dropoffPartner || !pickupPartner) {
@@ -352,17 +353,63 @@ const CreateParcel = ({ navigation }) => {
         },
       });
 
-      Alert.alert(
-        'Parcel Created!',
-        `Tracking ID: ${createdParcel.tracking_id}`,
-        [
-          {
-            text: 'Track Parcel',
-            onPress: () => navigation?.navigate?.('track', { trackingId: createdParcel.tracking_id }),
-          },
-          { text: 'Close', style: 'cancel' },
-        ]
-      );
+      // Process payment if not COD or Wallet
+      const txRef = createdParcel.tracking_id || `ADERA-${Date.now()}`;
+      const shouldProcessPayment = paymentMethod === 'chapa';
+
+      if (shouldProcessPayment) {
+        try {
+          const paymentResult = await initiatePayment({
+            method: paymentMethod,
+            amount: priceValue,
+            orderId: txRef,
+            customer: {
+              email: user?.email || 'customer@adera.app',
+              firstName: user?.user_metadata?.first_name || recipientName.split(' ')[0] || 'Customer',
+              lastName: user?.user_metadata?.last_name || recipientName.split(' ').slice(1).join('') || '',
+              phone: user?.phone || recipientPhone,
+            },
+            items: [{ parcelId: createdParcel.id, description: description || 'Parcel delivery' }],
+          });
+
+          // Open the payment gateway
+          if (paymentResult?.checkoutUrl) {
+            await openChapaCheckout(paymentResult.checkoutUrl);
+            // After returning from payment, navigate to callback for verification
+            navigation?.navigate?.('paymentCallback', {
+              tx_ref: paymentResult.txRef || txRef,
+              paymentMethod,
+            });
+          }
+        } catch (paymentError) {
+          console.error('Payment error:', paymentError);
+          // Parcel was created but payment failed — inform user
+          Alert.alert(
+            'Parcel Created, Payment Pending',
+            `Your parcel (ID: ${createdParcel.tracking_id}) was created. Payment processing encountered an issue. You can pay later from the parcel details.`,
+            [
+              {
+                text: 'Track Parcel',
+                onPress: () => navigation?.navigate?.('track', { trackingId: createdParcel.tracking_id }),
+              },
+              { text: 'Close', style: 'cancel' },
+            ]
+          );
+        }
+      } else {
+        // Wallet or COD — no redirect needed
+        Alert.alert(
+          'Parcel Created!',
+          `Tracking ID: ${createdParcel.tracking_id}`,
+          [
+            {
+              text: 'Track Parcel',
+              onPress: () => navigation?.navigate?.('track', { trackingId: createdParcel.tracking_id }),
+            },
+            { text: 'Close', style: 'cancel' },
+          ]
+        );
+      }
 
       resetForm();
     } catch (error) {
@@ -970,7 +1017,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
   },
   headerTitle: {
     fontSize: 20,
@@ -979,7 +1027,7 @@ const styles = StyleSheet.create({
   stepIndicator: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 16,
     alignItems: 'center',
   },
   stepItem: {
