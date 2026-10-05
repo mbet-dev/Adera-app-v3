@@ -1,8 +1,6 @@
 import React, { createContext, useEffect, useMemo } from 'react';
 import { useAuthStore } from './authStore';
 import { AuthState } from './types';
-import { Platform } from 'react-native';
-import { WebStabilityWrapper } from './WebStabilityWrapper';
 
 export const AuthContext = createContext(null);
 
@@ -82,12 +80,9 @@ const AuthProvider = ({ children }) => {
     ]
   );
 
-  // Wrap with a stability layer for web
-  const Wrapper = Platform.OS === 'web' ? WebStabilityWrapper : React.Fragment;
-
   return (
     <AuthContext.Provider value={authContextValue}>
-      <Wrapper>{children}</Wrapper>
+      {children}
     </AuthContext.Provider>
   );
 };

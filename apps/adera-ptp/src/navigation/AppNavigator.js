@@ -7,11 +7,27 @@ import CustomerNavigator from './CustomerNavigator';
 import PartnerNavigator from './PartnerNavigator';
 import DriverNavigator from './DriverNavigator';
 import StaffNavigator from './StaffNavigator';
+import PaymentCallbackScreen from '../screens/PaymentCallbackScreen';
 
 const Stack = createNativeStackNavigator();
 
+const RoleNavigator = () => {
+  const { role } = useAuth();
+  switch (role) {
+    case 'partner':
+      return <PartnerNavigator />;
+    case 'driver':
+      return <DriverNavigator />;
+    case 'staff':
+    case 'admin':
+      return <StaffNavigator />;
+    default:
+      return <CustomerNavigator />;
+  }
+};
+
 const AppNavigator = () => {
-  const { isAuthenticated, isLoading, role } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingScreen message="Loading Adera..." />;
@@ -21,25 +37,15 @@ const AppNavigator = () => {
     return <LoadingScreen message="Redirecting..." />;
   }
 
-  const getNavigatorForRole = () => {
-    switch (role) {
-      case 'customer':
-        return <CustomerNavigator />;
-      case 'partner':
-        return <PartnerNavigator />;
-      case 'driver':
-        return <DriverNavigator />;
-      case 'staff':
-      case 'admin':
-        return <StaffNavigator />;
-      default:
-        return <CustomerNavigator />;
-    }
-  };
-
   return (
     <ErrorBoundary fallbackMessage="Navigation error. Please restart the app.">
-      {getNavigatorForRole()}
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={RoleNavigator} />
+        <Stack.Screen
+          name="paymentCallback"
+          component={PaymentCallbackScreen}
+        />
+      </Stack.Navigator>
     </ErrorBoundary>
   );
 };

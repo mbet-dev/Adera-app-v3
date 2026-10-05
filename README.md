@@ -20,7 +20,7 @@ This is a **hybrid monorepo** powered by Expo, React Native, and Turborepo, shar
 | `@adera/preferences` | User preferences, biometric auth, secure storage |
 | `@adera/maps` | Location services, map components |
 | `@adera/utils` | QR code generation/scanning, formatters, validators |
-| `@adera/payments` | TeleBirr, Chapa, ArifPay integrations |
+| `@adera/payments` | Chapa payment gateway (sole online gateway), Wallet, COD |
 | `@adera/localization` | i18n support (Amharic, English) |
 
 ## User Roles
@@ -80,7 +80,7 @@ npx expo start --ios --port 8081
 Copy `apps/adera-ptp/.env.example` to `apps/adera-ptp/.env.local` and configure:
 
 - **Supabase** — Backend auth & database
-- **TeleBirr / Chapa / ArifPay** — Payment gateways
+- **Chapa** — Payment gateway (settles via TeleBirr, cards, bank transfer)
 - **Maps** — OpenStreetMap tile server
 
 ## Tech Stack
@@ -92,7 +92,7 @@ Copy `apps/adera-ptp/.env.example` to `apps/adera-ptp/.env.local` and configure:
 - **Navigation**: React Navigation 6
 - **UI**: React Native Paper (Material 3)
 - **Backend**: Supabase (PostgreSQL + Auth)
-- **Payments**: TeleBirr, Chapa, ArifPay
+- **Payments**: Chapa (online), Adera Wallet, Cash on Delivery
 - **Maps**: React Native Maps + Leaflet (web)
 
 ## Project Structure

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { supabase } from '@adera/auth';
+import { parsePoint } from '@adera/maps';
 import { getOperatingStatus } from '../utils/operatingHours';
 import { getPartnerMediaUrl } from '../utils/media';
 
@@ -181,42 +182,12 @@ export const usePartners = () => {
 
       // Transform data and calculate distances
       const transformedPartners = (data || []).map((shop) => {
-        // Extract coordinates from POINT type
-        // Supabase POINT format: {x: longitude, y: latitude} or string format "lon,lat"
-        let coords = { latitude: 8.9806, longitude: 38.7578 }; // Default to Addis Ababa
-        
-        if (shop.location) {
-          if (typeof shop.location === 'object') {
-            // Handle PostGIS POINT object format
-            if (shop.location.x !== undefined && shop.location.y !== undefined) {
-              coords = {
-                latitude: typeof shop.location.y === 'number' ? shop.location.y : parseFloat(shop.location.y) || 8.9806,
-                longitude: typeof shop.location.x === 'number' ? shop.location.x : parseFloat(shop.location.x) || 38.7578,
-              };
-            } else if (shop.location.latitude !== undefined && shop.location.longitude !== undefined) {
-              coords = {
-                latitude: typeof shop.location.latitude === 'number' ? shop.location.latitude : parseFloat(shop.location.latitude) || 8.9806,
-                longitude: typeof shop.location.longitude === 'number' ? shop.location.longitude : parseFloat(shop.location.longitude) || 38.7578,
-              };
-            }
-          } else if (typeof shop.location === 'string') {
-            // Handle string format "longitude,latitude" or "latitude,longitude"
-            const parts = shop.location.split(',');
-            if (parts.length === 2) {
-              const lon = parseFloat(parts[0]);
-              const lat = parseFloat(parts[1]);
-              if (!isNaN(lon) && !isNaN(lat)) {
-                // Check if it's likely lon,lat or lat,lon based on value ranges
-                if (lon > -180 && lon < 180 && lat > -90 && lat < 90) {
-                  coords = { latitude: lat, longitude: lon };
-                } else if (lat > -180 && lat < 180 && lon > -90 && lon < 90) {
-                  // Swapped format
-                  coords = { latitude: lon, longitude: lat };
-                }
-              }
-            }
-          }
-        }
+        // Extract coordinates from POINT type via the shared parser.
+        // Supabase (PostgREST) delivers POINT as the TEXT form "(lon,lat)";
+        // parseFloat on that string yields NaN, which silently collapsed every
+        // partner onto the default coordinate. parsePoint handles the string,
+        // {x,y}, and already-parsed {latitude,longitude} forms.
+        let coords = parsePoint(shop.location) || { latitude: 8.9806, longitude: 38.7578 }; // Default: Addis Ababa
 
         // Calculate distance if user location is available
         let distance = null;

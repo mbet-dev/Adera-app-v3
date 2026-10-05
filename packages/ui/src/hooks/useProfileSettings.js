@@ -1,21 +1,14 @@
 import { useState } from 'react';
 import { Alert, Modal, View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
-import { useAuth } from '@adera/auth';
+import { useAuth, clearBiometricCredentials } from '@adera/auth';
 import { usePreferences } from '@adera/preferences';
 import { useTheme } from '../ThemeProvider';
 
 export const useProfileSettings = (roleType = 'customer') => {
-  const { user: authUser, signOut } = useAuth();
+  const { userProfile: authUser, signOut } = useAuth();
   const theme = useTheme();
-  const { 
-    themeMode, 
-    setThemeMode, 
-    language, 
-    setLanguage, 
-    biometricEnabled, 
-    enableBiometrics, 
-    disableBiometrics 
-  } = usePreferences();
+  const { themeMode, setThemeMode, language, setLanguage, biometricEnabled, enableBiometrics, disableBiometrics } =
+    usePreferences();
 
   const [notifications, setNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -40,30 +33,33 @@ export const useProfileSettings = (roleType = 'customer') => {
       if (!result.success) {
         let message = 'Failed to enable biometrics';
         let title = 'Biometric Setup';
-        
+
         if (Platform.OS === 'web') {
           title = 'Not Available on Web';
-          message = 'Biometric authentication is only available on iOS and Android. Please use the native mobile app to enable this feature.';
+          message =
+            'Biometric authentication is only available on iOS and Android. Please use the native mobile app to enable this feature.';
         } else if (result.error === 'hardware_unavailable') {
           message = 'This device does not have biometric hardware (fingerprint or face recognition).';
         } else if (result.error === 'not_enrolled') {
-          message = 'No biometrics are enrolled on this device. Please set up fingerprint or face unlock in your device settings first.';
+          message =
+            'No biometrics are enrolled on this device. Please set up fingerprint or face unlock in your device settings first.';
         } else if (result.error === 'authentication_failed') {
           message = 'Biometric authentication was not successful. Please try again.';
         }
-        
+
         Alert.alert(title, message);
       } else {
         Alert.alert('Success', 'Biometric login has been enabled successfully!');
       }
     } else {
       await disableBiometrics();
+      await clearBiometricCredentials();
     }
   };
 
   const handleSignOut = () => {
     console.log('[ProfileScreen] handleSignOut: Starting sign out');
-    
+
     if (Platform.OS === 'web') {
       // On web, skip confirmation for smoother experience
       signOutUser();
@@ -90,9 +86,9 @@ export const useProfileSettings = (roleType = 'customer') => {
       if (typeof window !== 'undefined') {
         window._profileFetchAborted = true;
       }
-      
+
       const result = await signOut();
-      
+
       // signOut now returns { success: boolean, error?: string }
       if (result && !result.success) {
         const errorMessage = result.error || 'Failed to sign out. Please try again.';
@@ -101,7 +97,7 @@ export const useProfileSettings = (roleType = 'customer') => {
         }
         return; // Don't proceed if sign out failed
       }
-      
+
       // Sign out was successful (or result is undefined for backward compatibility)
       // The auth state change will handle navigation
     } catch (error) {
@@ -270,9 +266,24 @@ export const useProfileSettings = (roleType = 'customer') => {
         {
           section: 'Vehicle & Documents',
           items: [
-            { id: 'vehicle-info', label: 'Vehicle Information', icon: 'car-info', onPress: () => Alert.alert('Coming Soon', 'Vehicle info management coming soon') },
-            { id: 'driving-license', label: 'Driving License', icon: 'card-account-details', onPress: () => Alert.alert('Coming Soon', 'License management coming soon') },
-            { id: 'insurance', label: 'Insurance Details', icon: 'shield-car', onPress: () => Alert.alert('Coming Soon', 'Insurance management coming soon') },
+            {
+              id: 'vehicle-info',
+              label: 'Vehicle Information',
+              icon: 'car-info',
+              onPress: () => Alert.alert('Coming Soon', 'Vehicle info management coming soon'),
+            },
+            {
+              id: 'driving-license',
+              label: 'Driving License',
+              icon: 'card-account-details',
+              onPress: () => Alert.alert('Coming Soon', 'License management coming soon'),
+            },
+            {
+              id: 'insurance',
+              label: 'Insurance Details',
+              icon: 'shield-car',
+              onPress: () => Alert.alert('Coming Soon', 'Insurance management coming soon'),
+            },
           ],
         },
       ],
@@ -280,10 +291,34 @@ export const useProfileSettings = (roleType = 'customer') => {
         {
           section: 'Business Settings',
           items: [
-            { id: 'shop-status', label: 'Shop Open Status', icon: 'store-check', type: 'switch', value: shopOpen, onToggle: setShopOpen },
-            { id: 'auto-accept', label: 'Auto-Accept Parcels', icon: 'package-check', type: 'switch', value: autoAcceptParcels, onToggle: setAutoAcceptParcels },
-            { id: 'payment-methods', label: 'Payment Methods', icon: 'bank', onPress: () => Alert.alert('Coming Soon', 'Payment methods coming soon') },
-            { id: 'operating-hours', label: 'Operating Hours', icon: 'clock-outline', onPress: () => Alert.alert('Coming Soon', 'Operating hours coming soon') },
+            {
+              id: 'shop-status',
+              label: 'Shop Open Status',
+              icon: 'store-check',
+              type: 'switch',
+              value: shopOpen,
+              onToggle: setShopOpen,
+            },
+            {
+              id: 'auto-accept',
+              label: 'Auto-Accept Parcels',
+              icon: 'package-check',
+              type: 'switch',
+              value: autoAcceptParcels,
+              onToggle: setAutoAcceptParcels,
+            },
+            {
+              id: 'payment-methods',
+              label: 'Payment Methods',
+              icon: 'bank',
+              onPress: () => Alert.alert('Coming Soon', 'Payment methods coming soon'),
+            },
+            {
+              id: 'operating-hours',
+              label: 'Operating Hours',
+              icon: 'clock-outline',
+              onPress: () => Alert.alert('Coming Soon', 'Operating hours coming soon'),
+            },
           ],
         },
       ],
@@ -293,98 +328,104 @@ export const useProfileSettings = (roleType = 'customer') => {
   };
 
   const ThemeSelectModal = () => (
-    <Modal visible={isThemeModalVisible} transparent animationType="fade" onRequestClose={() => setThemeModalVisible(false)}>
-      <TouchableOpacity 
-        style={modalStyles.overlay} 
-        activeOpacity={1} 
-        onPress={() => setThemeModalVisible(false)}
-      >
-        <TouchableOpacity 
-          activeOpacity={1}
-          onPress={(e) => e.stopPropagation()}
-        >
+    <Modal
+      visible={isThemeModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setThemeModalVisible(false)}
+    >
+      <TouchableOpacity style={modalStyles.overlay} activeOpacity={1} onPress={() => setThemeModalVisible(false)}>
+        <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
           <View style={[modalStyles.modalContent, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose a Theme</Text>
-          {['system', 'light', 'dark'].map(mode => (
-            <TouchableOpacity
-              key={mode}
-              onPress={() => { setThemeMode(mode); setThemeModalVisible(false); }}
-              style={[
-                modalStyles.option,
-                { backgroundColor: themeMode === mode ? theme.colors.primaryContainer : 'transparent' }
-              ]}
-            >
-              <Text style={[
-                modalStyles.optionText,
-                { 
-                  color: themeMode === mode ? theme.colors.primary : theme.colors.onSurface,
-                  fontWeight: themeMode === mode ? 'bold' : 'normal' 
-                }
-              ]}>
-                {mode === 'system' ? 'System Default' : mode.charAt(0).toUpperCase() + mode.slice(1) + ' Mode'}
-              </Text>
+            <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose a Theme</Text>
+            {['system', 'light', 'dark'].map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                onPress={() => {
+                  setThemeMode(mode);
+                  setThemeModalVisible(false);
+                }}
+                style={[
+                  modalStyles.option,
+                  { backgroundColor: themeMode === mode ? theme.colors.primaryContainer : 'transparent' },
+                ]}
+              >
+                <Text
+                  style={[
+                    modalStyles.optionText,
+                    {
+                      color: themeMode === mode ? theme.colors.primary : theme.colors.onSurface,
+                      fontWeight: themeMode === mode ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {mode === 'system' ? 'System Default' : mode.charAt(0).toUpperCase() + mode.slice(1) + ' Mode'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity onPress={() => setThemeModalVisible(false)} style={modalStyles.cancelButton}>
+              <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity 
-            onPress={() => setThemeModalVisible(false)} 
-            style={modalStyles.cancelButton}
-          >
-            <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
-          </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
   );
-  
+
   const LanguageSelectModal = () => (
-    <Modal visible={isLangModalVisible} transparent animationType="fade" onRequestClose={() => setLangModalVisible(false)}>
-      <TouchableOpacity 
-        style={modalStyles.overlay} 
-        activeOpacity={1} 
-        onPress={() => setLangModalVisible(false)}
-      >
-        <TouchableOpacity 
-          activeOpacity={1}
-          onPress={(e) => e.stopPropagation()}
-        >
+    <Modal
+      visible={isLangModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setLangModalVisible(false)}
+    >
+      <TouchableOpacity style={modalStyles.overlay} activeOpacity={1} onPress={() => setLangModalVisible(false)}>
+        <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
           <View style={[modalStyles.modalContent, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose Language</Text>
-          {[{ code: 'en', label: 'English' }, { code: 'am', label: 'አማርኛ (Amharic)' }].map(opt => (
-            <TouchableOpacity
-              key={opt.code}
-              onPress={() => { setLanguage(opt.code); setLangModalVisible(false); }}
-              style={[
-                modalStyles.option,
-                { backgroundColor: language === opt.code ? theme.colors.primaryContainer : 'transparent' }
-              ]}
-            >
-              <Text style={[
-                modalStyles.optionText,
-                { 
-                  color: language === opt.code ? theme.colors.primary : theme.colors.onSurface,
-                  fontWeight: language === opt.code ? 'bold' : 'normal' 
-                }
-              ]}>
-                {opt.label}
-              </Text>
+            <Text style={[modalStyles.modalTitle, { color: theme.colors.onSurface }]}>Choose Language</Text>
+            {[
+              { code: 'en', label: 'English' },
+              { code: 'am', label: 'አማርኛ (Amharic)' },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.code}
+                onPress={() => {
+                  setLanguage(opt.code);
+                  setLangModalVisible(false);
+                }}
+                style={[
+                  modalStyles.option,
+                  { backgroundColor: language === opt.code ? theme.colors.primaryContainer : 'transparent' },
+                ]}
+              >
+                <Text
+                  style={[
+                    modalStyles.optionText,
+                    {
+                      color: language === opt.code ? theme.colors.primary : theme.colors.onSurface,
+                      fontWeight: language === opt.code ? 'bold' : 'normal',
+                    },
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity onPress={() => setLangModalVisible(false)} style={modalStyles.cancelButton}>
+              <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity 
-            onPress={() => setLangModalVisible(false)} 
-            style={modalStyles.cancelButton}
-          >
-            <Text style={[modalStyles.cancelText, { color: theme.colors.onSurfaceVariant }]}>Cancel</Text>
-          </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
   );
-  
+
   return {
     user: {
-      name: authUser?.user_metadata?.full_name || `Adera ${roleType.charAt(0).toUpperCase() + roleType.slice(1)}`,
+      name:
+        authUser?.full_name ||
+        authUser?.user_metadata?.full_name ||
+        `Adera ${roleType.charAt(0).toUpperCase() + roleType.slice(1)}`,
       email: authUser?.email,
       stats: getRoleSpecificStats(),
     },

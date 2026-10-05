@@ -12,23 +12,30 @@
       "backgroundColor": "#2E7D32"
     },
     "updates": {
-      "enabled": false,
-      "checkAutomatically": "never",
+      "url": "https://u.expo.dev/com.adera.app",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "scheme": "adera",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.adera.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Camera access is required to scan parcel QR codes."
+        "NSCameraUsageDescription": "Camera access is required to scan parcel QR codes.",
+        "NSLocationWhenInUseUsageDescription": "Location is used to show nearby Adera partner points and enable delivery tracking."
       }
     },
     "android": {
       "backgroundColor": "#2E7D32",
       "package": "com.adera.app",
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
       ]
     },
     "web": {

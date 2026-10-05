@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  SectionList,
-  ActivityIndicator,
-} from 'react-native';
-import { useTheme } from '@adera/ui';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, SectionList } from 'react-native';
+import { useTheme, OrderListSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth/src/supabase';
 import ReviewPromptBanner from '../components/ReviewPromptBanner';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
 const ORDER_STATUS_META = {
   pending: { label: 'Pending', icon: 'clock-outline', color: '#FF9800' },
@@ -50,7 +42,9 @@ const OrderHistoryScreen = ({ navigation }) => {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setOrders([]);
         return;
@@ -58,7 +52,8 @@ const OrderHistoryScreen = ({ navigation }) => {
 
       const { data, error: fetchError } = await supabase
         .from('orders')
-        .select(`
+        .select(
+          `
           id, order_number, status, subtotal, delivery_fee, tax_amount,
           discount_amount, total_amount, payment_method, payment_status,
           delivery_address, delivery_notes,
@@ -67,7 +62,8 @@ const OrderHistoryScreen = ({ navigation }) => {
           order_items (
             id, product_name, product_price, quantity, item_total
           )
-        `)
+        `
+        )
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -77,6 +73,7 @@ const OrderHistoryScreen = ({ navigation }) => {
         id: o.id,
         orderNumber: o.order_number,
         status: o.status,
+        parcelId: o.parcel_id || null,
         subtotal: Number(o.subtotal) || 0,
         deliveryFee: Number(o.delivery_fee) || 0,
         discount: Number(o.discount_amount) || 0,
@@ -114,7 +111,8 @@ const OrderHistoryScreen = ({ navigation }) => {
 
   const filteredOrders = useMemo(() => {
     if (filter === 'all') return orders;
-    if (filter === 'active') return orders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
+    if (filter === 'active')
+      return orders.filter((o) => ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status));
     return orders.filter((o) => o.status === filter);
   }, [orders, filter]);
 
@@ -154,14 +152,24 @@ const OrderHistoryScreen = ({ navigation }) => {
     const statusMeta = ORDER_STATUS_META[item.status] || ORDER_STATUS_META.pending;
 
     return (
-      <View style={[styles.orderCard, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant }]}>
+      <View
+        style={[
+          styles.orderCard,
+          { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant },
+        ]}
+      >
         {/* Header */}
         <View style={styles.orderHeader}>
           <View style={styles.orderHeaderLeft}>
             <Text style={[styles.orderNumber, { color: theme.colors.text.primary }]}>{item.orderNumber}</Text>
             <Text style={[styles.orderDate, { color: theme.colors.text.secondary }]}>{formatDate(item.createdAt)}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: isDark ? `${statusMeta.color}22` : `${statusMeta.color}18` }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: isDark ? `${statusMeta.color}22` : `${statusMeta.color}18` },
+            ]}
+          >
             <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
             <Text style={[styles.statusText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
           </View>
@@ -202,6 +210,17 @@ const OrderHistoryScreen = ({ navigation }) => {
           <Text style={[styles.totalLabel, { color: theme.colors.text.secondary }]}>Total</Text>
           <Text style={[styles.totalValue, { color: theme.colors.primary }]}>{formatCurrency(item.total)}</Text>
         </View>
+
+        {/* Track delivery — only for orders handed to Adera */}
+        {item.parcelId && (
+          <TouchableOpacity
+            style={[styles.trackBtn, { backgroundColor: theme.colors.primaryContainer }]}
+            onPress={() => navigation?.navigate?.('orderTracking', { orderId: item.id, parcelId: item.parcelId })}
+          >
+            <MaterialCommunityIcons name="map-marker-path" size={18} color={theme.colors.primary} />
+            <Text style={[styles.trackBtnText, { color: theme.colors.primary }]}>Track delivery</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -258,17 +277,19 @@ const OrderHistoryScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Order History</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <SafeAreaHeader>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation?.goBack?.()} style={styles.headerBtn}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={theme.colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text.primary }]}>Order History</Text>
+          <View style={{ width: 40 }} />
+        </View>
+      </SafeAreaHeader>
 
       {loading && orders.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+        <View style={[styles.loadingContainer, { paddingHorizontal: 16, alignItems: 'stretch' }]}>
+          <OrderListSkeleton count={4} />
         </View>
       ) : (
         <SectionList
@@ -297,13 +318,10 @@ const OrderHistoryScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
   },
   headerBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700' },
@@ -340,7 +358,14 @@ const styles = StyleSheet.create({
   orderHeaderLeft: { flex: 1, gap: 2 },
   orderNumber: { fontSize: 16, fontWeight: '700' },
   orderDate: { fontSize: 12 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
   statusText: { fontSize: 12, fontWeight: '700' },
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   shopIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
@@ -362,11 +387,28 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 14, fontWeight: '600' },
   totalValue: { fontSize: 18, fontWeight: '800' },
-  emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 40, paddingBottom: 100 },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 40,
+    paddingBottom: 100,
+  },
   emptyTitle: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
   emptySubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   browseBtn: { marginTop: 16, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
   browseBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  trackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  trackBtnText: { fontSize: 14, fontWeight: '700' },
 });
 
 export default OrderHistoryScreen;

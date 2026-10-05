@@ -41,13 +41,14 @@ const SafeArea = ({
   let manualBottomPadding = 0;
   
   if (withBottomNav && edges.includes('bottom')) {
-    // Bottom nav bar height (64px) + device inset + small buffer
+    // Bottom nav bar base height: 56px (Material 3 standard)
+    // Plus device safe area inset + small buffer for clearance
+    const NAV_BAR_HEIGHT = 56;
     const deviceBottomInset = insets.bottom || 0;
-    const minimumPadding = Platform.OS === 'ios' ? 20 : 16;
-    const safePadding = Math.max(deviceBottomInset, minimumPadding);
+    const buffer = 4;
     
-    // Total: nav bar height + safe padding + small buffer
-    manualBottomPadding = 64 + safePadding + 8;
+    // Total: nav bar + device inset + buffer
+    manualBottomPadding = NAV_BAR_HEIGHT + deviceBottomInset + buffer;
   }
 
   // Additional padding for inner container

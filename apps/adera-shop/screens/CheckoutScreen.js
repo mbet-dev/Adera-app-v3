@@ -3,18 +3,30 @@ import { View, Text, StyleSheet, ScrollView, Alert, Switch, TouchableOpacity } f
 import { TextInput, Button, Card, useTheme, LoadingScreen } from '@adera/ui';
 import { LocationPicker } from '@adera/maps';
 import { supabase } from '@adera/auth/src/supabase';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { usePayment, openChapaCheckout } from '@adera/payments';
+import SafeAreaHeader from '../components/SafeAreaHeader';
 
-export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onCheckoutComplete, onCancel }) {
+export default function CheckoutScreen({ navigation, route }) {
     const theme = useTheme();
     const isDark = theme.isDark;
+    const { initiatePayment } = usePayment();
     const [loading, setLoading] = useState(false);
 
+    const cartItems = route?.params?.cartItems || [];
+    const totalAmount = route?.params?.totalAmount || 0;
+
     const [deliveryMethod, setDeliveryMethod] = useState('standard');
+    const [paymentMethod, setPaymentMethod] = useState('cod');
     const [recipientName, setRecipientName] = useState('');
     const [recipientPhone, setRecipientPhone] = useState('');
     const [deliveryLocation, setDeliveryLocation] = useState(null);
     const [deliveryAddress, setDeliveryAddress] = useState('');
+
+    const PAYMENT_METHODS = [
+      { id: 'cod', label: 'Cash on Delivery', icon: 'cash' },
+      { id: 'chapa', label: 'Chapa (Card/Mobile)', icon: 'credit-card' },
+    ];
 
     const DELIVERY_FEE_STANDARD = 150;
     const DELIVERY_FEE_PTP = 250;
@@ -34,6 +46,7 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                 Alert.alert('Error', 'You must be logged in to place an order.');
                 return;
             }
+            const txRef = `SHOP-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert({
@@ -45,9 +58,10 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                     subtotal: totalAmount,
                     delivery_fee: currentDeliveryFee,
                     total_amount: finalTotal,
-                    payment_method: 'cod',
-                    status: 'pending',
+                    payment_method: paymentMethod,
+                    status: paymentMethod === 'chapa' ? 'pending_payment' : 'pending',
                     auto_create_parcel: deliveryMethod === 'ptp',
+                    tx_ref: txRef,
                 })
                 .select()
                 .single();
@@ -72,7 +86,58 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                     });
                 if (parcelError) throw parcelError;
             }
-            Alert.alert('Success', 'Order placed successfully!', [{ text: 'OK', onPress: onCheckoutComplete }]);
+            // Process Chapa payment if selected
+            if (paymentMethod === 'chapa') {
+                try {
+                    const paymentResult = await initiatePayment({
+                        method: 'chapa',
+                        amount: finalTotal,
+                        orderId: txRef,
+                        customer: {
+                            email: user.email || 'customer@adera.app',
+                            firstName: recipientName.split(' ')[0] || 'Customer',
+                            lastName: recipientName.split(' ').slice(1).join('') || '',
+                            phone: recipientPhone,
+                        },
+                        items: cartItems,
+                    });
+
+                    if (paymentResult?.checkoutUrl) {
+                        await openChapaCheckout(paymentResult.checkoutUrl);
+                        // Verify SERVER-SIDE via the chapa-verify Edge Function.
+                        // Marks the order paid idempotently with the secret key.
+                        const { data: verifyResult, error: verifyError } = await supabase.functions.invoke(
+                            'chapa-verify',
+                            { body: { tx_ref: paymentResult.txRef || txRef } }
+                        );
+                        if (verifyError) {
+                            console.error('Chapa verify error:', verifyError);
+                            Alert.alert(
+                                'Order Created, Payment Verifying',
+                                'Your order was placed. Payment verification is in progress — you will be notified once confirmed.',
+                                [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]
+                            );
+                            return;
+                        }
+                        if (!verifyResult?.success) {
+                            Alert.alert(
+                                'Payment Not Completed',
+                                verifyResult?.error || 'The payment was not completed. You can retry from order details.',
+                                [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]
+                            );
+                            return;
+                        }
+                    }
+                } catch (paymentError) {
+                    console.error('Chapa payment error:', paymentError);
+                    Alert.alert(
+                        'Order Created, Payment Pending',
+                        'Your order was placed but payment processing encountered an issue. You can pay from order details.',
+                    );
+                }
+            }
+
+            Alert.alert('Success', 'Order placed successfully!', [{ text: 'View Orders', onPress: () => navigation?.navigate?.('orderHistory') }]);
         } catch (error) {
             console.error('Checkout Error:', error);
             Alert.alert('Error', 'Failed to place order. Please try again.');
@@ -85,8 +150,10 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <ScrollView contentContainerStyle={styles.content}>
+            <SafeAreaHeader>
                 <Text style={[styles.title, { color: theme.colors.onSurface }]}>Checkout</Text>
+            </SafeAreaHeader>
+            <ScrollView contentContainerStyle={styles.content}>
 
                 {/* Delivery Method */}
                 <Card style={styles.section} elevation={1}>
@@ -106,6 +173,55 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                             Powered by Adera Peer-to-Peer Logistics. Fast and trackable.
                         </Text>
                     )}
+                </Card>
+
+                {/* Payment Method */}
+                <Card style={styles.section} elevation={1}>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Payment Method</Text>
+                    <View style={styles.paymentMethods}>
+                        {PAYMENT_METHODS.map((method) => (
+                            <TouchableOpacity
+                                key={method.id}
+                                style={[
+                                    styles.paymentMethod,
+                                    {
+                                        backgroundColor: paymentMethod === method.id
+                                            ? theme.colors.primaryContainer
+                                            : theme.colors.surface,
+                                        borderColor: paymentMethod === method.id
+                                            ? theme.colors.primary
+                                            : theme.colors.outline,
+                                    },
+                                ]}
+                                onPress={() => setPaymentMethod(method.id)}
+                            >
+                                <MaterialCommunityIcons
+                                    name={method.icon}
+                                    size={24}
+                                    color={paymentMethod === method.id ? theme.colors.primary : theme.colors.text.secondary}
+                                />
+                                <Text
+                                    style={[
+                                        styles.paymentLabel,
+                                        {
+                                            color: paymentMethod === method.id
+                                                ? theme.colors.primary
+                                                : theme.colors.onSurface,
+                                        },
+                                    ]}
+                                >
+                                    {method.label}
+                                </Text>
+                                {paymentMethod === method.id && (
+                                    <MaterialCommunityIcons
+                                        name="check-circle"
+                                        size={20}
+                                        color={theme.colors.primary}
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </Card>
 
                 {/* Recipient Details */}
@@ -149,7 +265,7 @@ export default function CheckoutScreen({ cartItems = [], totalAmount = 0, onChec
                 </Card>
 
                 <Button title="Place Order" onPress={handlePlaceOrder} style={styles.submitButton} size="lg" />
-                <Button title="Cancel" variant="ghost" onPress={onCancel} style={styles.cancelButton} />
+                <Button title="Cancel" variant="ghost" onPress={() => navigation?.goBack?.()} style={styles.cancelButton} />
             </ScrollView>
         </View>
     );
@@ -170,4 +286,7 @@ const styles = StyleSheet.create({
     totalText: { fontWeight: 'bold', fontSize: 18 },
     submitButton: { marginTop: 20 },
     cancelButton: { marginTop: 8, marginBottom: 32 },
+    paymentMethods: { gap: 12 },
+    paymentMethod: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, borderWidth: 2, gap: 12 },
+    paymentLabel: { flex: 1, fontSize: 16, fontWeight: '500' },
 });
