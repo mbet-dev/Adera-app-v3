@@ -1,196 +1,117 @@
-# Release Runbook — Adera Hybrid App
+# Adera — Release Runbook
 
-**Scope:** `apps/adera-ptp` (parcel delivery) and `apps/adera-shop` (e-commerce) — iOS + Android via EAS.
-**Last updated:** 2026-09-28
+> Companion to `docs/project-bible.md`. Playbook for shipping a version — web, mobile, and rollback — written for the repo as it stands today.
 
----
+## Matrix
 
-## 1. Prerequisites Checklist
+| Dimension | dev | stable | main |
+|---|---|---|---|
+| Purpose | active development | staging / release candidate | production (web auto-deploys here) |
+| Branch | `dev` | `stable` | `main` |
+| Web preview | `.freebuff/start-preview.sh` → port 8082 | review before merge | auto-deploy target |
+| Mobile | `npx expo start --android/ios` from either app | OTA channel staging | EAS builds + store submit |
 
-- [ ] EAS account + project linked (`eas whoami`; `projectId` present in `app.json.extra.eas.projectId`)
-- [ ] Apple credentials configured (`eas credentials`); Google service account key at `apps/*/google-services.json` (git-ignored)
-- [ ] Environment files present per app: `apps/adera-ptp/.env`, `apps/adera-shop/.env` — copy from `.env.example` and fill:
-  - `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-  - `EXPO_PUBLIC_SENTRY_DSN` (optional; silent no-op if unset)
-  - `EXPO_PUBLIC_CHAPA_PUBLIC_KEY` (Chapa checkout init)
-- [ ] Chapa **secret** key lives ONLY in the `chapa-verify` Edge Function secrets — never in app env:
-  `supabase secrets set CHAPA_SECRET_KEY=...`
-- [ ] Edge Functions deployed: `supabase functions deploy chapa-verify send-order-confirmation`
-- [ ] DB migrations applied in order: `supabase/schema.sql`, then numbered `supabase/*.sql` files
-- [ ] Migrations 11 + 12 applied (notifications table + staff broadcast policies) — see [Migration Deployment](#8-database-migration-deployment) below
+**Flow:** work on `dev` → PR into `dev` → when a cut is ready, merge `dev` → `stable` (release candidate) → after verification, merge `stable` → `main` (production web deploy triggers).
 
-## 2. Pre-Release Verification (run all green)
+## Before first real-money / production-ready release
 
-```bash
-npm run lint          # 0 errors
-npm test              # all Jest suites pass
-cd apps/adera-ptp && CI=1 npx expo export --platform web   # bundles clean
-cd apps/adera-shop && CI=1 npx expo export --platform web  # bundles clean
-```
+These are still TODO per `memory/03-development-status.md` and must be done **before** pushing real payment or wallet traffic:
 
-CI (`.github/workflows/ci.yml`) runs the same gates on every push — the release commit must be green there.
+1. **Apply pending Supabase migrations** 10 (wallet system), 11/12 (notifications + staff broadcast policies) to the live database.
+2. **Set `CHAPA_SECRET_KEY` as an Edge Function secret** (and any other server-side secret the `chapa-verify` function needs); switch Chapa keys from test to production values.
+3. **EAS credentials** (Apple + Google developer accounts) + first store builds; confirm `eas.json` OTA channel config matches runtime version policy (`appVersion`).
+4. **SMS gateway** for recipient alerts (walking-customer flows depend on it).
+5. **Wallet UI** (top-up / transaction history / withdraw) — the DB layer is ready; screens are not.
+6. **Server-side fee validation** — move parcel INSERT behind an Edge Function so the client cannot tamper with the fee.
 
-## 3. Build & Submit
+Until those land, keep the app in the mock/demo posture and treat any live traffic as fair-game only with the secrets and migrations in place.
+
+## Shipping a web release (manual)
 
 ```bash
-# Staged rollout candidates (internal QA builds)
-cd apps/adera-ptp && eas build --profile preview --platform android
-cd apps/adera-ptp && eas build --profile preview --platform ios
+# 1. Work on dev, open the PR, get it in.
+# 2. Cut stable:
+git checkout stable
+git merge dev                       # or rebase, whichever the team standard is
+git push origin stable
 
-# Production
-cd apps/adera-ptp && eas build --profile production --platform all
-cd apps/adera-ptp && eas submit --profile production --platform all   # after credentials set
+# 3. Verify stable preview:
+#    - start PTP preview on a free port
+#    - walk the critical flows (login, create parcel, track, shop checkout)
+#    - check Sentry for new errors, lint + tests green
 
-cd apps/adera-shop && eas build --profile production --platform all
-cd apps/adera-shop && eas submit --profile production --platform all
+# 4. Promote to main:
+git checkout main
+git merge stable
+git push origin main               # web auto-deploys from main (per README)
 ```
 
-`production` profile auto-increments versionCode/buildNumber and produces `.aab` (Play) / `.ipa` (TestFlight).
+If the web auto-deploy trigger does **not** exist yet, deploy manually from `main` using the platform's deploy step (Vercel is mentioned in README historically — confirm current target before promoting).
 
-**Web:** `npx expo export --platform web` per app → deploy `dist/` to your static host (Vercel/Netlify/Cloudflare Pages).
+## Shipping a mobile OTA update (JS-only change)
 
-## 4. Store Assets & OTA
+Expo OTA (via EAS) is configured in `eas.json` with an `appVersion` runtime version policy. For a JS-only change (no native change):
 
-- Store listings/screenshots maintained outside this repo (EAS Submit pulls `appleId/ascAppId/appleTeamId` from `eas.json` — fill those before submitting).
-- JS-only fixes can ship via OTA without store review: `eas update --branch production --message "fix: ..."`.
-- Native/config changes (permissions, plugins, SDK) require a full build.
+```bash
+eas update --branch production --message "<what changed>"
+```
 
-## 5. Rollback Plan
+This pushes a JS bundle update to existing installed apps without a store submission. Native changes (new permissions, native modules, SDK bumps that touch native code) still require a new build + store submit.
 
-| Layer | Rollback procedure |
+OTA is enabled on both apps today. Confirm the channel and runtime version policy in `eas.json` before pushing an OTA, because a mismatched runtime version policy can leave some installed app versions unable to receive the update.
+
+## Shipping a full mobile build (native change)
+
+```bash
+eas build --platform <ios|android> --profile <production|development>
+```
+
+You'll need the store credentials configured. First-time flow:
+
+1. `eas credentials` to provision/sign.
+2. Choose the right build profile in `eas.json`.
+3. Run the build, submit to the store (EAS submit or manual).
+4. Record the version in `memory/03-development-status.md` and `docs/release-runbook.md` changelog.
+
+## Rollback
+
+### Web (auto-deploy from main)
+
+- **Revert the merge** on `main` (revert the merge commit or cherry-pick the good state back), push — web redeploys from the reverted `main`.
+- If the bad change is still on `dev`/`stable`, revert or fix there too so the next cut isn't re-contaminated.
+
+### OTA update (EAS)
+
+- Publish a **corrective OTA update** that supersedes the bad one (newer update wins).
+- If the bad update is irrecoverable at the JS layer, issue a new OTA that restores the previous good bundle or force a minimum version pin if the policy allows.
+- For native-breaking changes, rollback means shipping a new build — plan accordingly and avoid native changes in the same cut as risky JS.
+
+### Database / schemas
+
+- Schema changes are additive in this repo (CREATE IF NOT EXISTS / new tables / new policies). Reverting a bad schema change means a **new migration** that corrects rather than drops — never manually drop production tables.
+- For a bad function or policy, deploy a corrected version in a new change file and apply; document both the mistake and the fix in status.
+
+### Wallet / payments
+
+- If a payment-related change is suspect, **stop** automated payout/commission flows that touch real money until verified; switch Chapa back to test keys if needed to halt real transactions while you diagnose.
+- Wallet movements are ledgered (`balance_before`/`balance_after`) — reconciliation can reconstruct truth from the ledger even after a bad flow.
+
+## Verification checklist before promoting stable → main
+
+- [ ] `npm run lint` green
+- [ ] `npm test` green (87 tests)
+- [ ] `npm run type-check` green
+- [ ] `npm audit` reviewed (no high/critical unaddressed)
+- [ ] Critical flows exercised in a live preview: auth, create parcel + track, shop browse + checkout, role screens (at least customer + partner)
+- [ ] Wallet query uses `.maybeSingle()` (or equivalent) so zero-row rows don't 406
+- [ ] No `.env.local` or secrets in the diff
+- [ ] Sentry shows no new spikes (or they're understood)
+- [ ] `memory/03-development-status.md` updated with what shipped
+- [ ] `docs/project-bible.md` / `docs/business-rules.md` updated if rules/flows changed
+- [ ] Run doc `.freebuff/run.md` still reflects how to spin up the previews
+
+## Changelog
+
+| Date | Release activity |
 |---|---|
-| **OTA update** | `eas update --branch production --message "rollback"` republishing the last known-good bundle; or `eas update:rollback --branch production` |
-| **Android (Play)** | Play Console → Production → halt staged rollout; promote previous `.aab` from release library (catalog keeps last N builds) |
-| **iOS (App Store)** | Cannot revert a released binary; ship a new build with the fix expedited. TestFlight users: push corrected build to same group |
-| **Edge Function** | `supabase functions deploy chapa-verify` from the previous git tag: `git checkout <last-good-tag> -- supabase/functions && supabase functions deploy chapa-verify` |
-| **DB migrations** | Migrations are additive (`CREATE TABLE IF NOT EXISTS`, `CREATE POLICY`); a bad policy is fixed forward by `DROP POLICY` + re-`CREATE`. Never restore from backup for policy mistakes — issue a corrective migration |
-| **Client env (Supabase/keys)** | Rotate in Supabase/Chapa dashboards; app picks up on next launch (no rebuild needed for anon key rotation) |
-
-## 6. Post-Release Verification
-
-- [ ] Chapa sandbox→production switch confirmed (`CHAPA_SECRET_KEY` points at live)
-- [ ] Create a real parcel end-to-end → pay via Chapa → confirm `payments.payment_status='completed'` and `parcels.paid_at` set by the Edge Function
-- [ ] Shop order → checkout → Edge Function marks order paid → `Track delivery` button appears in Order History → Order Tracking screen shows map pins
-- [ ] Sentry receiving events (`EXPO_PUBLIC_SENTRY_DSN` live) — trigger a test exception in staging build
-- [ ] Push notifications: parcel status change inserts a `notifications` row and reaches the device
-
-## 7. Escalation
-
-Payment pipeline failures (Chapa verify) are **P1** — revert the Edge Function to last-good tag, then investigate. Data-integrity issues (missing paid flags) can be repaired idempotently by re-invoking `chapa-verify` with the same `tx_ref` (it is safe to re-run).
-
----
-
-## 8. Database Migration Deployment
-
-### Overview
-
-Database migrations are stored in `supabase/*.sql` files. The schema is defined in `supabase/schema.sql`, with incremental migrations numbered sequentially (e.g., `11-notifications-push.sql`, `12-staff-broadcast-policy.sql`).
-
-### Combined Migration File
-
-For convenience, a combined migration file is available at:
-- `supabase/11-12-notifications-and-broadcast-policies.sql` — Combines migrations 11 and 12 with clear section markers
-
-### Deployment Methods
-
-#### Method 1: Supabase Dashboard (Recommended for Manual Deployment)
-
-1. Log in to your Supabase project at https://supabase.com/dashboard
-2. Navigate to **Database → SQL Editor**
-3. Open the combined migration file: `supabase/11-12-notifications-and-broadcast-policies.sql`
-4. Copy the entire contents
-5. Paste into the SQL Editor
-6. Click **Run** to execute
-7. Verify success by checking the notification table:
-   ```sql
-   \dt notifications
-   \dp notifications
-   ```
-
-#### Method 2: Supabase CLI (Local Development)
-
-```bash
-# Link to your project (requires Supabase CLI auth)
-cd supabase
-supabase link --project-ref <your-project-ref>
-
-# Apply all pending migrations
-supabase db push
-
-# Or apply a specific migration
-supabase db exec --file 11-12-notifications-and-broadcast-policies.sql
-```
-
-**Note:** CLI authentication requires a personal access token (`sbp_...`). Run `supabase login` in your browser first.
-
-#### Method 3: Direct psql Connection
-
-```bash
-# Requires database password and network access to Supabase database
-PGPASSWORD='your-database-password' psql \
-  -h <project-ref>.supabase.co \
-  -U postgres \
-  -d postgres \
-  -f supabase/11-12-notifications-and-broadcast-policies.sql
-```
-
-**Note:** Direct psql access requires network connectivity to the Supabase database host, which may be restricted in some environments.
-
-### Migration Contents
-
-#### Migration 11: Notifications Table + Push Support
-
-- Adds `push_token` column to `users` table
-- Creates `notifications` table with full schema
-- Creates indexes for efficient queries
-- Enables RLS with user-level policies
-- Creates helper functions: `create_notification()`, `mark_notifications_read()`
-- Creates `notify_parcel_status_change()` trigger function
-- Attaches trigger to `parcels` table
-
-#### Migration 12: Staff Broadcast Policies
-
-- Allows staff/admin to INSERT notifications for any user (broadcasts)
-- Allows staff/admin to SELECT all notifications (support queue visibility)
-- Allows staff/admin to UPDATE notifications (mark as read/resolved)
-
-### Verification
-
-After applying migrations, verify:
-
-```sql
--- Check tables exist
-\dt notifications
-\dt
-
--- Check policies
-\dp notifications
-
--- Test notification creation (as service role)
-SELECT create_notification(
-  'user-uuid-here',
-  'Test Notification',
-  'This is a test',
-  'info'
-);
-
--- Check trigger
-\d parcels
-```
-
-### Rollback
-
-Migrations are designed to be additive and idempotent:
-- `CREATE TABLE IF NOT EXISTS` — safe to re-run
-- `CREATE POLICY` — will fail if policy exists (use `DROP POLICY IF EXISTS` first if needed)
-- Bad policies can be fixed forward: `DROP POLICY policy_name ON table_name;` then re-create
-
-**Never restore from backup for policy mistakes** — issue a corrective migration instead.
-
-### Current Migration Status
-
-| Migration | File | Status |
-|-----------|------|--------|
-| 11 | `11-notifications-push.sql` | Pending application |
-| 12 | `12-staff-broadcast-policy.sql` | Pending application |
-| Combined | `11-12-notifications-and-broadcast-policies.sql` | Ready for deployment |
+| 2026-10-12 | Runbook written as companion to onboarding cheat sheet + project bible; reflects repo state as of this write (dev latest, stable + main bridged from dev, OTA + EAS configured, wallet/secret/migration TODOs outstanding). |

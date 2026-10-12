@@ -21,7 +21,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "expo": "~54.0.25",
-    "expo-camera": "~16.1.6",
+    "expo-camera": "~17.0.10",
     "expo-linear-gradient": "~15.0.7",
     "expo-local-authentication": "~17.0.9",
     "expo-secure-store": "~15.0.8",
