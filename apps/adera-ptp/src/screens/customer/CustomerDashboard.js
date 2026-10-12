@@ -86,7 +86,7 @@ const CustomerDashboard = () => {
           .from('wallets')
           .select('balance')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!walletError && walletData) {
           setWalletBalance(Number(walletData.balance) || 0);
