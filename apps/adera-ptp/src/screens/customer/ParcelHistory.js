@@ -8,7 +8,6 @@ import {
   RefreshControl,
   SectionList,
   Share,
-  Alert,
 } from 'react-native';
 import { SafeArea, Card, StatusBadge, TextInput, useTheme, ParcelListSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -40,11 +39,11 @@ const formatDate = (date) =>
 
 const ParcelHistory = ({ navigation }) => {
   const theme = useTheme();
-  const isDark = theme.isDark;
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { parcels, summary, loading, refreshing, refresh } = useParcelHistory({ filter, searchQuery });
+  const isDark = theme.isDark;
 
   const filterConfig = useMemo(
     () => [
@@ -177,7 +176,7 @@ const ParcelHistory = ({ navigation }) => {
 
   const renderParcelCard = ({ item }) => {
     const status = STATUS_META[item.status] || STATUS_META[0];
-    const isCompleted = item.status === 6;
+    const _isCompleted = item.status === 6;
     const isCancelled = item.status < 0;
 
     return (

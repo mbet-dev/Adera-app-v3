@@ -22,13 +22,12 @@ import { useRoute } from '@react-navigation/native';
 
 const LoginScreen = ({ navigation }) => {
   const theme = useTheme();
-  const isDark = theme.isDark;
   const route = useRoute();
   const { signIn, isLoading, resendConfirmationEmail, checkEmailConfirmationStatus, refreshSession } = useAuth();
   const { getErrorMessage, isNetworkError } = useAuthErrors();
   const { biometricEnabled, enableBiometrics } = usePreferences();
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [_showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showResendLink, setShowResendLink] = useState(false);

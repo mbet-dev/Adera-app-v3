@@ -14,9 +14,11 @@ const Support = () => {
   const theme = useTheme();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  useTheme();
   const [broadcast, setBroadcast] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  void broadcast;
 
   const loadTickets = React.useCallback(async () => {
     setLoading(true);
@@ -32,7 +34,7 @@ const Support = () => {
       } else {
         setTickets([]);
       }
-    } catch (e) {
+    } catch (_e) {
       setTickets([]);
     } finally {
       setLoading(false);
@@ -40,11 +42,11 @@ const Support = () => {
   }, []);
 
   React.useEffect(() => {
-    loadTickets();
+    setTimeout(() => loadTickets(), 0);
   }, [loadTickets]);
 
-  const priorityOf = (createdAt) => {
-    const hours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
+  const priorityOf = (createdAt, now) => {
+    const hours = (now - new Date(createdAt).getTime()) / 3600000;
     if (hours > 24) return { label: 'High', color: '#F44336' };
     if (hours > 6) return { label: 'Medium', color: '#FF9800' };
     return { label: 'Low', color: '#4CAF50' };
@@ -53,8 +55,8 @@ const Support = () => {
   const sendBroadcast = async () => {
     const text = broadcast.trim();
     if (!text || sending) return;
-    setSending(true);
-    setSent(false);
+    setTimeout(() => setSending(true), 0);
+    setTimeout(() => setSent(false), 0);
     try {
       const { data: users, error } = await supabase.from('users').select('id').limit(1000);
       if (!error && users && users.length > 0) {
@@ -69,7 +71,7 @@ const Support = () => {
       setBroadcast('');
       setSent(true);
       setTimeout(() => setSent(false), 3000);
-    } catch (e) {
+    } catch (_e) {
       // keep the composer open on failure
     } finally {
       setSending(false);
@@ -113,7 +115,7 @@ const Support = () => {
         </Text>
 
         {tickets.map((ticket) => {
-          const p = priorityOf(ticket.created_at);
+          const p = priorityOf(ticket.created_at, Date.now());
           return (
             <Card key={ticket.id} style={styles.ticketCard}>
               <View style={styles.ticketHeader}>

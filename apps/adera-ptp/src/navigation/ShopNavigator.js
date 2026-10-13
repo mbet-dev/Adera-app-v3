@@ -19,7 +19,7 @@ const ShopStack = createNativeStackNavigator();
  * Contains the bottom tab navigator with browse/cart/orders/profile tabs.
  */
 function ShopTabs({ navigation }) {
-  const theme = useTheme();
+  useTheme();
   const cartItems = useCartStore((s) => s.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const routes = [

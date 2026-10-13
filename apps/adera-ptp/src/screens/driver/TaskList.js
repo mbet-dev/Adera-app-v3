@@ -5,7 +5,7 @@ import { CustomFAB } from '@adera/ui';
 import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const TaskList = ({ navigation }) => {
+const TaskList = ({ navigation: _navigation }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -34,7 +34,7 @@ const TaskList = ({ navigation }) => {
     pending: allTasks.filter(t => t.status === 'pending').length,
     in_progress: allTasks.filter(t => t.status === 'in_progress').length,
     completed: allTasks.filter(t => t.status === 'completed').length,
-  }), []);
+  }), [allTasks]);
 
   const getStatusColor = (status) => {
     switch (status) {

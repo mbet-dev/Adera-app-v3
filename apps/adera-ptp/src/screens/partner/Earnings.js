@@ -4,7 +4,7 @@ import { Text, Button, Chip } from 'react-native-paper';
 import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const Earnings = ({ navigation }) => {
+const Earnings = ({ _navigation }) => {
   const theme = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
 

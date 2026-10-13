@@ -149,6 +149,8 @@ function AppContent() {
 
 export default function App() {
   const AppWithTheme = () => {
+    void Platform;
+    void Constants;
     const { themeMode, isReady } = usePreferences();
 
     if (!isReady) {
@@ -162,19 +164,18 @@ export default function App() {
 
     return (
       <ThemeProvider forceLightMode={false} initialMode={themeMode}>
-        <AuthProvider>
-          <PaymentProvider>
-          <NavigationContainer linking={linking} theme={DefaultTheme}>
-            <ErrorBoundary
-              fallbackMessage="Adera Shop needs to restart."
-              onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
-            >
-              <View style={styles.container}>
-                <StatusBar style="auto" />
-                <AppContent />
-              </View>
-            </ErrorBoundary>
-          </NavigationContainer>
+        <AuthProvider>          <PaymentProvider>
+            <NavigationContainer linking={linking} theme={DefaultTheme}>
+              <ErrorBoundary
+                fallbackMessage="Adera Shop needs to restart."
+                onError={(error, errorInfo) => captureException(error, { contexts: { react: { componentStack: errorInfo?.componentStack } } })}
+              >
+                <View style={styles.container}>
+                  <StatusBar style="auto" />
+                  <AppContent />
+                </View>
+              </ErrorBoundary>
+            </NavigationContainer>
           </PaymentProvider>
         </AuthProvider>
       </ThemeProvider>

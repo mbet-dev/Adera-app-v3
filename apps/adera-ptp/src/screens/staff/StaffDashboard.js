@@ -5,7 +5,7 @@ import { AppBar, Card, SafeArea, useTheme } from '@adera/ui';
 import { useAuth } from '@adera/auth';
 import { Ionicons } from '@expo/vector-icons';
 
-const StaffDashboard = ({ navigation }) => {
+const StaffDashboard = ({ _navigation }) => {
   const theme = useTheme();
   const { userProfile } = useAuth();
   const [stats] = useState({

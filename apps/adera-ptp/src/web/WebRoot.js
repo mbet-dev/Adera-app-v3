@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AppRegistry, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import App from '../../App';
 
 // Aggressive stability control for web platform
@@ -21,7 +21,7 @@ class RenderStabilizer {
     if (timeSinceLastRender < RENDER_THRESHOLD) {
       this.consecutiveRenders++;
       if (this.consecutiveRenders > MAX_CONSECUTIVE_RENDERS) {
-        console.log('[RenderStabilizer] Blocking rapid re-render');
+        console.warn('[RenderStabilizer] Blocking rapid re-render');
         return false;
       }
     } else {

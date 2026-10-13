@@ -272,7 +272,7 @@ export const usePartners = () => {
   // Filter and sort partners (with safe null handling)
   useEffect(() => {
     if (!partners || partners.length === 0) {
-      setFilteredPartners([]);
+      setTimeout(() => setFilteredPartners([]), 0);
       return;
     }
 

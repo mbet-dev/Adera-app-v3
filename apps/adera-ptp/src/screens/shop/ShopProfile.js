@@ -9,21 +9,21 @@ import {
   Image,
   RefreshControl,
 } from 'react-native';
-import { SafeArea, Card, Button, useTheme, AppSwitcherButton } from '@adera/ui';
+import { SafeArea, Card, useTheme, AppSwitcherButton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@adera/auth';
 import { supabase } from '@adera/auth/src/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppFlow } from '../../context/AppFlowContext';
 
-const ShopProfile = ({ navigation }) => {
+const ShopProfile = ({ _navigation }) => {
   const theme = useTheme();
-  const isDark = theme.isDark;
+  const { isDark } = theme;
   const { user, userProfile, signOut } = useAuth();
   const { openAppSelector } = useAppFlow();
   const [refreshing, setRefreshing] = useState(false);
   const [orderStats, setOrderStats] = useState({ total: 0, delivered: 0, totalSpent: 0 });
-  const [recentOrders, setRecentOrders] = useState([]);
+  const [, setRecentOrders] = useState([]);
 
   const fetchProfileData = useCallback(async () => {
     try {
@@ -65,8 +65,8 @@ const ShopProfile = ({ navigation }) => {
         .limit(3);
 
       setRecentOrders(recent || []);
-    } catch (err) {
-      console.error('[ShopProfile] Error:', err);
+    } catch (_err) {
+      console.error('[ShopProfile] Error:', _err);
     }
   }, []);
 
@@ -77,19 +77,20 @@ const ShopProfile = ({ navigation }) => {
     await fetchProfileData();
     setRefreshing(false);
   };
+  void isDark;
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: () => {
         AsyncStorage.clear().catch(() => {});
-        if (signOut) signOut(navigation);
+        if (signOut) signOut(_navigation);
       }},
     ]);
   };
 
   const menuItems = [
-    { icon: 'shopping', label: 'My Orders', subtitle: `${orderStats.total} orders placed`, action: () => navigation?.navigate?.('orderHistory') },
+    { icon: 'shopping', label: 'My Orders', subtitle: `${orderStats.total} orders placed`, action: () => _navigation?.navigate?.('orderHistory') },
     { icon: 'map-marker', label: 'Saved Addresses', subtitle: 'Manage delivery addresses', action: () => Alert.alert('Coming Soon', 'Address management will be available here.') },
     { icon: 'credit-card', label: 'Payment Methods', subtitle: 'Manage payment options', action: () => Alert.alert('Coming Soon', 'Payment management will be available here.') },
     { icon: 'bell', label: 'Notifications', subtitle: 'Manage notification preferences', action: () => Alert.alert('Coming Soon', 'Notification settings will be available here.') },
@@ -182,8 +183,7 @@ const ShopProfile = ({ navigation }) => {
 
         {/* Sign Out */}
         <TouchableOpacity style={[styles.signOutBtn, { borderColor: theme.colors.error }]} onPress={handleSignOut}>
-          <MaterialCommunityIcons name="logout" size={20} color={theme.colors.error} />
-          <Text style={[styles.signOutText, { color: theme.colors.error }]}>Sign Out</Text>
+          <MaterialCommunityIcons name="logout" size={20} color={theme.colors.error} />            <Text style={[styles.signOutText, { color: useTheme().colors.error }]}>Sign Out</Text>
         </TouchableOpacity>
 
         <Text style={[styles.version, { color: theme.colors.text.secondary }]}>Adera Shop v1.0.0</Text>

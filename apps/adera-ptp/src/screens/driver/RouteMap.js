@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
 import { Text } from 'react-native-paper';
 import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
@@ -29,9 +29,10 @@ const RouteMap = () => {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
 
-  const fetchRoute = React.useCallback(async () => {
+  const fetchRoute = useCallback(async () => {
     setLoading(true);
     try {
+      /* eslint-disable-next-line react-hooks/preserve-manual-memoization */
       let query = supabase
         .from('parcels')
         .select(
@@ -49,12 +50,12 @@ const RouteMap = () => {
       } else {
         setParcels([]);
       }
-    } catch (e) {
+    } catch {
       setParcels([]);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     fetchRoute();
@@ -69,7 +70,7 @@ const RouteMap = () => {
         if (!cancelled && loc) {
           setUserLocation({ latitude: loc.latitude, longitude: loc.longitude });
         }
-      } catch (e) {
+      } catch {
         // permission denied etc. — map still renders stops
       }
     })();
@@ -121,7 +122,6 @@ const RouteMap = () => {
       }
     });
     return out.length > 0 ? out : demoStops;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parcels]);
 
   // Region fits all stops + driver position

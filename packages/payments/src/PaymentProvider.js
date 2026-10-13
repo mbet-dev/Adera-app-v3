@@ -15,7 +15,7 @@ export const PaymentProvider = ({ children }) => {
    * Returns { checkoutUrl, txRef } for redirect-based gateways,
    * or { confirmed: true } for wallet/COD.
    */
-  const initiatePayment = useCallback(async ({ method, amount, orderId, customer, items }) => {
+  const initiatePayment = useCallback(async ({ method, amount, orderId, customer, items, meta }) => {
     switch (method) {
       case PaymentMethod.CHAPA: {
         const { initializeChapaTransaction } = require('./ChapaPayment');
@@ -25,7 +25,7 @@ export const PaymentProvider = ({ children }) => {
           firstName: customer.firstName,
           lastName: customer.lastName,
           txRef: orderId,
-          meta: { orderId, itemCount: items?.length },
+          meta: { orderId, itemCount: items?.length, ...(meta || {}) },
         });
       }
 

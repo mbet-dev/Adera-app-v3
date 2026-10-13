@@ -9,7 +9,7 @@ export default function useBarcodePermissions() {
       try {
         const { status } = await BarCodeScanner.getPermissionsAsync();
         setHasPermission(status === 'granted');
-      } catch (e) {
+      } catch {
         setHasPermission(false);
       }
     })();
@@ -21,7 +21,7 @@ export default function useBarcodePermissions() {
       const granted = status === 'granted';
       setHasPermission(granted);
       return granted;
-    } catch (e) {
+    } catch {
       setHasPermission(false);
       return false;
     }

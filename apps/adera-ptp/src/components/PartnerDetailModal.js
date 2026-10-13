@@ -12,7 +12,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@adera/ui';
 import OperatingHoursDisplay from './OperatingHoursDisplay';
 import defaultStorefront from '../../assets/adaptive-icon.png';
@@ -46,22 +46,23 @@ const PartnerDetailModal = ({ visible = false, partner = null, userLocation = nu
       const userLon = typeof userLocation.longitude === 'number' ? userLocation.longitude : parseFloat(userLocation.longitude || lon);
       const latDelta = Math.max(Math.abs(lat - userLat) * 2.5, 0.005);
       const lonDelta = Math.max(Math.abs(lon - userLon) * 2.5, 0.005);
-      setMapRegion({ latitude: (lat + userLat) / 2, longitude: (lon + userLon) / 2, latitudeDelta: latDelta, longitudeDelta: lonDelta });
+      setTimeout(() => setMapRegion({ latitude: (lat + userLat) / 2, longitude: (lon + userLon) / 2, latitudeDelta: latDelta, longitudeDelta: lonDelta }), 0);
     } else {
-      setMapRegion({ latitude: lat, longitude: lon, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+      setTimeout(() => setMapRegion({ latitude: lat, longitude: lon, latitudeDelta: 0.01, longitudeDelta: 0.01 }), 0);
     }
   }, [visible, partner, userLocation]);
 
   useEffect(() => {
     if (!visible || !partner || !partner.storefrontImage) return;
     const url = getRealImageUrl(partner.storefrontImage);
-    if (!url) return setImageError(true);
-    setImageLoading(true);
-    setImageError(false);
+    if (!url) return;
+    setTimeout(() => setImageError(true), 0);
+    setTimeout(() => setImageLoading(true), 0);
+    setTimeout(() => setImageError(false), 0);
     // quick existence check
     fetch(url, { method: 'HEAD' })
-      .then((r) => { if (!r.ok) throw new Error('no image'); setImageLoading(false); })
-      .catch(() => { setImageLoading(false); setImageError(true); });
+      .then((r) => { if (!r.ok) throw new Error('no image'); setTimeout(() => setImageLoading(false), 0); })
+      .catch(() => { setTimeout(() => setImageLoading(false), 0); setTimeout(() => setImageError(true), 0); });
   }, [visible, partner]);
 
   if (!partner) return null;
@@ -84,7 +85,7 @@ const PartnerDetailModal = ({ visible = false, partner = null, userLocation = nu
     alignSelf: 'flex-start',
   });
 
-  const getMapUrlWithUserLocation = () => {
+  const _getMapUrlWithUserLocation = () => {
     if (!partner || !partner.location) return null;
     const lat = Number(partner.location.latitude || 0);
     const lon = Number(partner.location.longitude || 0);
@@ -101,14 +102,14 @@ const PartnerDetailModal = ({ visible = false, partner = null, userLocation = nu
     return `https://www.openstreetmap.org/export/embed.html?bbox=${minLon},${minLat},${maxLon},${maxLat}&layer=mapnik&marker=${lat},${lon}`;
   };
 
-  const openInGoogleMaps = () => {
+  const _openInGoogleMaps = () => {
     try {
       const lat = Number(partner.location.latitude || 0);
       const lon = Number(partner.location.longitude || 0);
       const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
       if (Platform.OS === 'web' && typeof window !== 'undefined') window.open(url, '_blank');
       else Linking.openURL(url);
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   };

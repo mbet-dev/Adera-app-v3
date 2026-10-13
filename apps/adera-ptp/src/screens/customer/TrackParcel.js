@@ -8,7 +8,6 @@ import {
   TextInput as RNTextInput,
   Alert,
   Share,
-  Platform,
 } from 'react-native';
 import { SafeArea, Card, Button, useTheme, TrackResultSkeleton } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -49,6 +48,10 @@ const TrackParcel = ({ navigation, route }) => {
   const abortRef = useRef(null);
   const channelRef = useRef(null);
   const lastStatusRef = useRef(null);
+  // Refs mirroring the callbacks below so effects/callbacks declared earlier in the
+  // body can call them without hitting the temporal dead zone.
+  const fetchParcelRef = useRef(null);
+  const playUpdateFeedbackRef = useRef(null);
 
   // Play haptic + sound feedback when a real-time update arrives
   const playUpdateFeedback = useCallback(async (newStatus) => {
@@ -93,14 +96,6 @@ const TrackParcel = ({ navigation, route }) => {
     const re = /^ADE\d{8}-\d+$/i;
     return re.test(trackingId.trim());
   }, [trackingId]);
-
-  // Auto-track if navigated with trackingId
-  useEffect(() => {
-    if (route?.params?.trackingId) {
-      setTrackingId(route.params.trackingId);
-      fetchParcel(route.params.trackingId);
-    }
-  }, [route?.params?.trackingId]);
 
   // ── Offline cache helpers ──
   const saveParcelCache = useCallback(async (pId, pTrackingId, pData, eData) => {
@@ -228,6 +223,24 @@ const TrackParcel = ({ navigation, route }) => {
     [saveParcelCache, loadParcelCache]
   );
 
+  // Mirror the callbacks into refs after they are declared so effects that run
+  // earlier in the body (e.g. the route-param watcher) can invoke them safely.
+  useEffect(() => {
+    fetchParcelRef.current = fetchParcel;
+  }, [fetchParcel]);
+  useEffect(() => {
+    playUpdateFeedbackRef.current = playUpdateFeedback;
+  }, [playUpdateFeedback]);
+
+  // Auto-track if navigated with trackingId (declared after the refs are wired
+  // so the fetch runs on first mount as well).
+  useEffect(() => {
+    if (route?.params?.trackingId) {
+      setTrackingId(route.params.trackingId);
+      fetchParcelRef.current?.(route.params.trackingId);
+    }
+  }, [route?.params?.trackingId]);
+
   // ─── Real-time subscription ───
   useEffect(() => {
     if (!parcelData?.id) {
@@ -280,7 +293,7 @@ const TrackParcel = ({ navigation, route }) => {
             setLastUpdate(new Date());
             // Play feedback only if status actually changed
             if (prevStatus !== null && prevStatus !== updated.status) {
-              playUpdateFeedback(updated.status);
+              playUpdateFeedbackRef.current?.(updated.status);
             }
             lastStatusRef.current = updated.status;
           }
@@ -677,7 +690,13 @@ const TrackParcel = ({ navigation, route }) => {
         <View style={styles.actions}>
           <Button
             title="Contact Support"
-            onPress={() => Alert.alert('Support', 'Support chat coming soon')}
+            onPress={() => {
+              if (navigation?.navigate) {
+                navigation.navigate('support');
+              } else {
+                Alert.alert('Support', 'Support chat coming soon');
+              }
+            }}
             variant="outline"
             leftIcon="chat"
             style={{ flex: 1 }}

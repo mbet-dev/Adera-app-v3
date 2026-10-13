@@ -5,7 +5,7 @@ import { AppBottomNavigation } from '@adera/ui';
 // Import Staff screens
 import StaffDashboard from '../screens/staff/StaffDashboard';
 import ParcelOversight from '../screens/staff/ParcelOversight';
-import Analytics from '../screens/staff/Analytics';
+import _Analytics from '../screens/staff/Analytics';
 import Support from '../screens/staff/Support';
 import StaffProfile from '../screens/staff/StaffProfile';
 

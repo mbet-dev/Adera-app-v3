@@ -123,6 +123,7 @@ serve(async (req) => {
       tx_ref: txRef,
       parcel_id: existingPayment.parcel_id ?? null,
       order_id: existingPayment.order_id ?? null,
+      amount: Number(existingPayment.amount),
     });
   }
 
@@ -210,7 +211,26 @@ serve(async (req) => {
     }
   }
 
-  if (!parcelId && !orderId) {
+  // Wallet top-ups have no parcel/order target: the money settles into the
+  // caller's own wallet instead. Identified by explicit meta or our tx_ref
+  // prefix (ADERA-WALLET-…).
+  const isWalletTopUp =
+    !parcelId && !orderId &&
+    (meta.purpose === "wallet_topup" || txRef.startsWith("ADERA-WALLET-"));
+
+  if (isWalletTopUp) {
+    // Identity comes from the verified JWT (client flow) or an existing
+    // payments row — never from client-supplied meta alone.
+    ownerId = ownerId || callerUserId;
+    if (!ownerId) {
+      return json({ error: "Wallet top-up requires an authenticated user" }, 401);
+    }
+    // Validate the paid amount against the amount declared at initialize time.
+    const declaredTopUp = Number(meta.amount ?? NaN);
+    expectedAmount = expectedAmount ?? (Number.isFinite(declaredTopUp) ? declaredTopUp : null);
+  }
+
+  if (!parcelId && !orderId && !isWalletTopUp) {
     return json({ error: "No parcel or order found for this transaction reference" }, 404);
   }
 
@@ -314,16 +334,45 @@ serve(async (req) => {
       .neq("payment_status", "paid");
   }
 
+  if (isWalletTopUp && ownerId) {
+    // Replays short-circuit at step 3 (payment already 'completed'), so this
+    // credit runs once per tx_ref. Look up the payments row for the audit trail.
+    const { data: topUpRow } = await admin
+      .from("payments")
+      .select("id")
+      .eq("gateway_transaction_id", txRef)
+      .maybeSingle();
+
+    const topUpAmount = paidAmount || expectedAmount || 0;
+    const { error: creditError } = await admin.rpc("credit_wallet", {
+      p_user_id: ownerId,
+      p_amount: topUpAmount,
+      p_wallet_type: "customer",
+      p_reference_id: topUpRow?.id ?? null,
+      p_reference_type: "top_up",
+      p_description: `Chapa wallet top-up (${txRef})`,
+    });
+
+    if (creditError) {
+      console.error("Wallet credit failed:", creditError);
+      return json({ success: false, error: "Wallet credit failed — contact support with ref " + txRef }, 500);
+    }
+  }
+
   // ── 8. Notify the user (in-app; push handled by NotificationBell) ──
   if (ownerId) {
-    const label = parcelId ? "parcel" : "order";
+    const label = isWalletTopUp ? "wallet top-up" : parcelId ? "parcel" : "order";
+    // reference_type is CHECK-constrained to ('parcel','order','payment','shop')
+    const { data: notifyRow } = isWalletTopUp
+      ? await admin.from("payments").select("id").eq("gateway_transaction_id", txRef).maybeSingle()
+      : { data: null };
     await admin.from("notifications").insert({
       user_id: ownerId,
       title: "Payment Confirmed",
       body: `Your Chapa payment of ${paidAmount || expectedAmount} ETB for ${label} ${txRef} was confirmed successfully.`,
       type: "payment",
-      reference_id: parcelId || orderId,
-      reference_type: parcelId ? "parcel" : "order",
+      reference_id: parcelId || orderId || notifyRow?.id || null,
+      reference_type: isWalletTopUp ? "payment" : parcelId ? "parcel" : "order",
     });
   }
 
@@ -333,6 +382,7 @@ serve(async (req) => {
     tx_ref: txRef,
     parcel_id: parcelId,
     order_id: orderId,
+    wallet_topup: isWalletTopUp || undefined,
     amount: paidAmount || expectedAmount,
     currency: chapaData?.currency || "ETB",
     method: chapaData?.method || null,

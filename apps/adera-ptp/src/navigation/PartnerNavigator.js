@@ -47,7 +47,7 @@ const PartnerNavigator = () => {
       return (
         <CustomFAB
           icon="qrcode-scan"
-          onPress={() => console.log('Scan QR FAB pressed')}
+          onPress={() => console.warn('Scan QR FAB pressed')}
         />
       );
     }

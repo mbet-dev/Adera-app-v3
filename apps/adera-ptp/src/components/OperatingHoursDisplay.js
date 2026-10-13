@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@adera/ui';
 
 /**
@@ -12,7 +11,6 @@ const OperatingHoursDisplay = ({ operatingHours = {}, style }) => {
   const theme = useTheme();
 
   // Only use valid weekday values
-  let todayLocale = undefined;
   let todayDayKey = undefined;
   try {
     // Get current weekday (in English, e.g., 'Monday')
@@ -118,7 +116,7 @@ const OperatingHoursDisplay = ({ operatingHours = {}, style }) => {
 
   const statusColor = getStatusColor();
   const statusText = getStatusText();
-  const isOpen = isCurrentlyOpen();
+  const _isOpen = isCurrentlyOpen();
 
   return (
     <View style={[styles.container, style]}>
