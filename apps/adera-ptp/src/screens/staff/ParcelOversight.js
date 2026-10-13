@@ -20,18 +20,19 @@ const ParcelOversight = () => {
     setRefreshing(false);
     try {
       const staleBefore = new Date(Date.now() - 12 * 3600 * 1000).toISOString();
+      const expiresBefore = new Date().toISOString();
       const { data, error } = await supabase
         .from('parcels')
         .select(
           'id, tracking_id, status, recipient_name, recipient_phone, pickup_address, delivery_address, updated_at, expires_at, created_at',
         )
         .in('status', [0, 1, 2, 3, 4])
-        .or(`updated_at.lt.${staleBefore},expires_at.lt.${new Date().toISOString()}`)
+        .or(`updated_at.lt.${staleBefore},expires_at.lt.${expiresBefore}`)
         .order('updated_at', { ascending: true })
         .limit(40);
       if (error) throw error;
       setParcels(data || []);
-    } catch (e) {
+    } catch (_e) {
       setParcels([]);
     } finally {
       setLoading(false);
@@ -39,7 +40,7 @@ const ParcelOversight = () => {
   }, []);
 
   useEffect(() => {
-    fetchParcels();
+    setTimeout(() => fetchParcels(), 0);
   }, [fetchParcels]);
 
   const onRefresh = useCallback(() => {

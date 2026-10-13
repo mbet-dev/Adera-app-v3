@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,13 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { SafeArea, Card, TextInput, Button, useTheme } from '@adera/ui';
+import { SafeArea, TextInput, Button, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { usePartners } from '../hooks/usePartners';
 import PartnerSelectionMap from './PartnerSelectionMap';
 
 const { width } = Dimensions.get('window');
+const _width = width;
 
 const PartnerSelectionModal = ({
   visible,
@@ -36,8 +37,6 @@ const PartnerSelectionModal = ({
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    sortBy,
-    setSortBy,
     categories,
   } = usePartners();
 

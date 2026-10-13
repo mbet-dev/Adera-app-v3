@@ -4,7 +4,7 @@ import { Text } from 'react-native-paper';
 import { CustomFAB } from '@adera/ui';
 import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
 import { useAuth } from '@adera/auth';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const DriverDashboard = ({ navigation }) => {
   const theme = useTheme();

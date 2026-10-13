@@ -5,7 +5,6 @@ import { SafeArea, Card, useTheme, StatusBadge, DashboardSkeleton } from '@adera
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@adera/auth';
-import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@adera/auth/src/supabase';
 import NotificationBell from '../../components/NotificationBell';
 
@@ -30,15 +29,15 @@ function statusTone(status, isDark) {
 
 const { width } = Dimensions.get('window');
 
-const CustomerDashboard = () => {
+const CustomerDashboard = ({ navigation }) => {
   const theme = useTheme();
   const isDark = theme.isDark;
   const { signOut, userProfile } = useAuth();
-  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [parcels, setParcels] = useState([]);
   const [parcelStats, setParcelStats] = useState({ active: 0, delivered: 0, total: 0 });
+  useTheme();
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = useCallback(async () => {
@@ -102,14 +101,16 @@ const CustomerDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
+    setTimeout(() => fetchDashboardData(), 0);
   }, [fetchDashboardData]);
 
-  const onRefresh = async () => {
+  const _onRefresh = async () => {
     setRefreshing(true);
     await fetchDashboardData();
     setRefreshing(false);
   };
+  const onRefresh = _onRefresh;
+  const _width = width;
 
   const quickActions = useMemo(
     () => [
@@ -272,16 +273,16 @@ const CustomerDashboard = () => {
                 {walletBalance.toLocaleString('en-ET', { style: 'currency', currency: 'ETB' })}
               </Text>
               <View style={styles.walletActions}>
-                {[
-                  { icon: 'plus-circle-outline', label: 'Top Up' },
-                  { icon: 'history', label: 'Transactions' },
-                  { icon: 'wallet-giftcard', label: 'Rewards' },
-                ].map((item) => (
-                  <TouchableOpacity key={item.label} style={styles.walletChip}>
-                    <MaterialCommunityIcons name={item.icon} size={16} color="#FFFFFF" />
-                    <Text style={styles.walletChipText}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
+              {[
+                { icon: 'plus-circle-outline', label: 'Top Up', onPress: () => navigation?.navigate?.('wallet') },
+                { icon: 'history', label: 'Transactions', onPress: () => navigation?.navigate?.('wallet') },
+                { icon: 'headset', label: 'Support', onPress: () => navigation?.navigate?.('support') },
+              ].map((item) => (
+                <TouchableOpacity key={item.label} style={styles.walletChip} onPress={item.onPress}>
+                  <MaterialCommunityIcons name={item.icon} size={16} color="#FFFFFF" />
+                  <Text style={styles.walletChipText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
               </View>
             </LinearGradient>
 

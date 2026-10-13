@@ -18,7 +18,6 @@ const NOTIF_ICONS = {
  */
 const NotificationBell = ({ size = 24, color }) => {
   const theme = useTheme();
-  const isDark = theme.isDark;
   const bellColor = color || theme.colors.text.primary;
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -47,7 +46,7 @@ const NotificationBell = ({ size = 24, color }) => {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    setTimeout(() => fetchNotifications(), 0);
   }, [fetchNotifications]);
 
   // Real-time subscription

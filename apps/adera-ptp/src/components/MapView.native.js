@@ -24,7 +24,7 @@ const getNativeMaps = () => {
   try {
     // Cached by Metro's require after first success.
     nativeMaps = require('react-native-maps');
-  } catch (e) {
+  } catch {
     nativeMaps = null;
   }
   return nativeMaps;

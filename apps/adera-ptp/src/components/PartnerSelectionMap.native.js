@@ -20,7 +20,7 @@ const getNativeMaps = () => {
   if (nativeMaps !== undefined) return nativeMaps;
   try {
     nativeMaps = require('react-native-maps');
-  } catch (e) {
+  } catch {
     nativeMaps = null;
   }
   return nativeMaps;

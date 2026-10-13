@@ -54,8 +54,10 @@ const AuthNavigator = () => {
     if (authState === 'authenticated' && !userProfile) {
       timeoutRef.current = setTimeout(() => setProfileTimeout(true), PROFILE_LOAD_TIMEOUT);
     } else {
-      setProfileTimeout(false);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setTimeout(() => {
+        setProfileTimeout(false);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      }, 0);
     }
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, [authState, userProfile]);

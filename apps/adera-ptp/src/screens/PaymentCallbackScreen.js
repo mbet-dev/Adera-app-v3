@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme, LoadingScreen, Button } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@adera/auth';
@@ -15,6 +15,19 @@ export default function PaymentCallbackScreen({ navigation, route }) {
   const theme = useTheme();
   const [status, setStatus] = useState('verifying'); // verifying | success | failed
   const [details, setDetails] = useState(null);
+
+  const isTopUp = route?.params?.purpose === 'wallet_topup';
+
+  // Both "Back" buttons should return to the customer tab area. When this
+  // screen is pushed on the CustomerStack we can select the exact tab; from
+  // the root stack we fall back to goBack().
+  const goHome = (tab = 'dashboard', trackingId) => {
+    if (navigation?.navigate) {
+      navigation.navigate('customerTabs', { tab, trackingId });
+      return;
+    }
+    navigation?.goBack?.();
+  };
 
   useEffect(() => {
     const verify = async () => {
@@ -82,7 +95,9 @@ export default function PaymentCallbackScreen({ navigation, route }) {
             Payment Successful!
           </Text>
           <Text style={[styles.subtitle, { color: theme.colors.text.secondary }]}>
-            Your payment of {details?.amount} {details?.currency || 'ETB'} has been confirmed.
+            {isTopUp
+              ? `${details?.amount} ${details?.currency || 'ETB'} has been added to your Adera Wallet.`
+              : `Your payment of ${details?.amount} ${details?.currency || 'ETB'} has been confirmed.`}
           </Text>
           <View style={[styles.detailsCard, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.detailRow}>
@@ -104,19 +119,36 @@ export default function PaymentCallbackScreen({ navigation, route }) {
               </View>
             )}
           </View>
-          <Button
-            title="Back to Dashboard"
-            onPress={() => navigation?.navigate?.('Dashboard')}
-            size="lg"
-            style={styles.actionButton}
-          />
-          <Button
-            title="Track Parcel"
-            variant="outline"
-            onPress={() => navigation?.navigate?.('track')}
-            size="lg"
-            style={styles.secondaryButton}
-          />
+          {isTopUp ? (
+            <Button
+              title="Open Wallet"
+              onPress={() => {
+                if (navigation?.navigate) {
+                  navigation.navigate('wallet');
+                } else {
+                  navigation?.goBack?.();
+                }
+              }}
+              size="lg"
+              style={styles.actionButton}
+            />
+          ) : (
+            <>
+              <Button
+                title="Back to Dashboard"
+                onPress={() => goHome('dashboard')}
+                size="lg"
+                style={styles.actionButton}
+              />
+              <Button
+                title="Track Parcel"
+                variant="outline"
+                onPress={() => goHome('track', route?.params?.trackingId)}
+                size="lg"
+                style={styles.secondaryButton}
+              />
+            </>
+          )}
         </View>
       </View>
     );
@@ -156,7 +188,7 @@ export default function PaymentCallbackScreen({ navigation, route }) {
         <Button
           title="Back to Dashboard"
           variant="outline"
-          onPress={() => navigation?.navigate?.('Dashboard')}
+          onPress={() => goHome('dashboard')}
           size="lg"
           style={styles.secondaryButton}
         />
