@@ -84,11 +84,15 @@ export const useAuthStore = create(
         if (error) {
           console.error('[AuthStore] Error getting initial session:', error);
         }
-        // The onAuthStateChange listener will handle the session and profile fetching.
-        // We just need to ensure the initial state is set correctly if no session is found.
-        // The initial session check is now handled by the onAuthStateChange callback.
-        // We only set isInitialized here.
-        set({ isInitialized: true });
+        // Resolve initial auth state immediately so the app doesn't stall when there is
+        // no stored session (onAuthStateChange may not fire without a session change).
+        set({
+          session,
+          isInitialized: true,
+          authState: session?.user
+            ? AuthState.AUTHENTICATED
+            : AuthState.UNAUTHENTICATED,
+        });
 
         // Return unsubscribe function for cleanup
         return () => {

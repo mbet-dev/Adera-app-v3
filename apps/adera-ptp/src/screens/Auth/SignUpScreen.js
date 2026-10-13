@@ -39,7 +39,7 @@ const ROLE_OPTIONS = [
 
 const SignUpScreen = ({ navigation }) => {
   const theme = useTheme();
-  const { signUp, isLoading, notifications, dismissNotification } = useAuth();
+  const { signUp, isLoading } = useAuth();
   const { getErrorMessage, isNetworkError } = useAuthErrors();
 
   const [showPassword, setShowPassword] = useState(false);

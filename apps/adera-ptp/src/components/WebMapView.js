@@ -186,7 +186,7 @@ const WebMapView = ({ partner, userLocation, height = 260 }) => {
       const url = `https://www.google.com/maps/search/?api=1&query=${target.lat},${target.lon}`;
       if (typeof window !== 'undefined') window.open(url, '_blank');
       else Linking.openURL(url);
-    } catch (e) {
+    } catch {
       // ignore
     }
   };

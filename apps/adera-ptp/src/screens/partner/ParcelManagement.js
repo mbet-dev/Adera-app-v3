@@ -36,7 +36,7 @@ const ParcelManagement = () => {
         .limit(50);
       if (error) throw error;
       setParcels(data || []);
-    } catch (e) {
+    } catch (_e) {
       setParcels([]);
     } finally {
       setLoading(false);
@@ -45,7 +45,7 @@ const ParcelManagement = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    fetchParcels();
+    setTimeout(() => fetchParcels(), 0);
   }, [fetchParcels]);
 
   const onRefresh = useCallback(() => {
@@ -60,9 +60,9 @@ const ParcelManagement = () => {
     return 'Parcel in custody';
   };
 
-  const timeAgo = (ts) => {
+  const timeAgo = (ts, _now = Date.now()) => {
     if (!ts) return '';
-    const diff = Date.now() - new Date(ts).getTime();
+    const diff = _now - new Date(ts).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'just now';
     if (mins < 60) return `${mins}m ago`;
@@ -90,7 +90,7 @@ const ParcelManagement = () => {
               {partnerLabel(parcel)}
             </Text>
             <Text variant="bodySmall" style={[styles.parcelTime, { color: theme.colors.text.secondary }]}>
-              {timeAgo(parcel.created_at)} · {parcel.pickup_address || ''}
+              {timeAgo(parcel.created_at, Date.now())} · {parcel.pickup_address || ''}
             </Text>
           </Card>
         ))}

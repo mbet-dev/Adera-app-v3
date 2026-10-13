@@ -12,14 +12,13 @@ import { supabase } from '@adera/auth';
 const Analytics = () => {
   const theme = useTheme();
   const [metrics, setMetrics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [_loading, setLoading] = useState(true);
 
   const fetchMetrics = useCallback(async () => {
+    const _now = Date.now();
     setLoading(true);
-    setRefreshing(false);
     try {
-      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const dayAgo = new Date(_now - 24 * 3600 * 1000).toISOString();
       const [parcelsRes, transitRes, ordersRes, paymentsRes] = await Promise.all([
         supabase.from('parcels').select('id, total_amount', { count: 'exact' }).gte('created_at', dayAgo),
         supabase.from('parcels').select('id', { count: 'exact' }).in('status', [2, 3, 4]),
@@ -38,7 +37,7 @@ const Analytics = () => {
         ordersToday: ordersRes.count ?? 0,
         revenue,
       });
-    } catch (e) {
+    } catch (_e) {
       setMetrics({ parcelsToday: 0, inTransit: 0, ordersToday: 0, revenue: 0 });
     } finally {
       setLoading(false);
@@ -46,7 +45,7 @@ const Analytics = () => {
   }, []);
 
   useEffect(() => {
-    fetchMetrics();
+    setTimeout(() => fetchMetrics(), 0);
   }, [fetchMetrics]);
 
   const onRefresh = useCallback(() => {

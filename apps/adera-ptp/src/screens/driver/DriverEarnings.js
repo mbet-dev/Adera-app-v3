@@ -4,7 +4,7 @@ import { Text, ProgressBar } from 'react-native-paper';
 import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const DriverPerformance = ({ navigation }) => {
+const DriverPerformance = ({ _navigation }) => {
   const theme = useTheme();
 
   const weeklyStats = useMemo(() => ([

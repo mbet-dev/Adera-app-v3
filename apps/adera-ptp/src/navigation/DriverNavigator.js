@@ -47,7 +47,7 @@ const DriverNavigator = () => {
       return (
         <CustomFAB
           icon="plus"
-          onPress={() => console.log('Add new task FAB pressed')}
+          onPress={() => console.warn('Add new task FAB pressed')}
         />
       );
     }

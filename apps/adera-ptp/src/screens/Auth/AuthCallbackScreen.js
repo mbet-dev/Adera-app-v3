@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet, Platform, Text, Alert } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@adera/auth';
 import { useAuth } from '@adera/auth';
@@ -9,7 +9,7 @@ const AuthCallbackScreen = () => {
   const navigation = useNavigation();
   const theme = useTheme();
   const { refreshSession } = useAuth();
-  const [status, setStatus] = useState('processing'); // processing, success, error
+  const [_status, setStatus] = useState('processing'); // processing, success, error
   const [message, setMessage] = useState('Processing...');
 
   useEffect(() => {

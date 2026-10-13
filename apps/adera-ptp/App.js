@@ -91,11 +91,11 @@ function AppContent() {
 
       notificationListeners = setupNotificationListeners({
         onReceive: (notification) => {
-          console.log('[App] Foreground notification:', notification.request.content.title);
+          console.warn('[App] Foreground notification:', notification.request.content.title);
         },
         onTap: (notification) => {
           const data = notification.request.content.data;
-          console.log('[App] Notification tapped:', data);
+          console.warn('[App] Notification tapped:', data);
           // Deep link based on notification type
           if (data?.tracking_id) {
             // Could navigate to track screen
@@ -113,18 +113,20 @@ function AppContent() {
 
   useEffect(() => {
     if (isAuthenticated && !wasAuthenticated) {
-      setWasAuthenticated(true);
+      setTimeout(() => setWasAuthenticated(true), 0);
     }
     if (!isAuthenticated && !isLoading && wasAuthenticated) {
-      setHasCompletedOnboarding(false);
-      setShowAppSelector(false);
-      setSelectedApp(null);
-      setGuestMode(false);
-      setShowShopGateway(false);
-      setWasAuthenticated(false);
-      if (typeof window !== 'undefined' && window.location) {
-        setTimeout(() => { window.location.reload(); }, 500);
-      }
+      setTimeout(() => {
+        setHasCompletedOnboarding(false);
+        setShowAppSelector(false);
+        setSelectedApp(null);
+        setGuestMode(false);
+        setShowShopGateway(false);
+        setWasAuthenticated(false);
+        if (typeof window !== 'undefined' && window.location) {
+          setTimeout(() => { window.location.reload(); }, 500);
+        }
+      }, 0);
     }
   }, [isAuthenticated, isLoading, wasAuthenticated]);
 
@@ -210,23 +212,22 @@ function AppContent() {
   );
 }
 
-export default function App() {
-  const AppWithTheme = () => {
-    const { themeMode, isReady } = usePreferences();
+function AppWithTheme() {
+  const { themeMode, isReady } = usePreferences();
 
-    if (!isReady) {
-      return <ThemelessLoadingScreen message="Loading preferences..." />;
-    }
+  if (!isReady) {
+    return <ThemelessLoadingScreen message="Loading preferences..." />;
+  }
 
-    const linking = {
-      prefixes: [Linking.createURL('/')],
-      config: { screens: { AuthCallback: 'auth/callback' } },
-    };
+  const linking = {
+    prefixes: [Linking.createURL('/')],
+    config: { screens: { AuthCallback: 'auth/callback' } },
+  };
 
-    return (
-      <ThemeProvider forceLightMode={false} initialMode={themeMode}>
-        <AuthProvider>
-          <PaymentProvider>
+  return (
+    <ThemeProvider forceLightMode={false} initialMode={themeMode}>
+      <AuthProvider>
+        <PaymentProvider>
           <NavigationContainer linking={linking} theme={DefaultTheme}>
             <ErrorBoundary
               fallbackMessage="Adera needs to restart."
@@ -238,12 +239,13 @@ export default function App() {
               </View>
             </ErrorBoundary>
           </NavigationContainer>
-          </PaymentProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    );
-  };
+        </PaymentProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
 
+export default function App() {
   return (
     <SafeAreaProvider>
       <PreferencesProvider>

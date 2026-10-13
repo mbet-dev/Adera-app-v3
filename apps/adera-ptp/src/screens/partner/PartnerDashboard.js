@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { Text } from 'react-native-paper';
 import { CustomFAB } from '@adera/ui';
@@ -6,11 +6,12 @@ import { AppBar, Card, SafeArea, StatusBadge, useTheme } from '@adera/ui';
 import { useAuth } from '@adera/auth';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-const PartnerDashboard = ({ navigation }) => {
+const PartnerDashboard = ({ _navigation }) => {
   const theme = useTheme();
+  useAuth();
   const { userProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     pendingPickups: 5,
     todayEarnings: 850,
     totalParcels: 127,
@@ -43,9 +44,7 @@ const PartnerDashboard = ({ navigation }) => {
       icon: 'wallet-outline',
       tone: '#EF6C00',
     },
-  ]), [stats.todayEarnings]);
-
-  const appointments = useMemo(() => ([
+  ]), [stats]);  const appointments = useMemo(() => ([
     {
       id: 'slot-1',
       title: 'Drop-off wave',
@@ -71,10 +70,6 @@ const PartnerDashboard = ({ navigation }) => {
       status: 'due',
     },
   ]), []);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
 
   const loadDashboardData = async () => {
     setRefreshing(true);
@@ -105,7 +100,7 @@ const PartnerDashboard = ({ navigation }) => {
   };
 
   const openScanner = () => {
-    navigation?.navigate?.('scan') || console.log('Open QR scanner');
+    _navigation?.navigate?.('scan') || console.warn('Open QR scanner');
   };
 
   return (
@@ -214,7 +209,7 @@ const PartnerDashboard = ({ navigation }) => {
               icon="cube"
               title="View Parcels"
               description="Manage pending parcels"
-              onPress={() => navigation?.navigate?.('parcels')}
+              onPress={() => _navigation?.navigate?.('parcels')}
             />
           </View>
         </View>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  Dimensions,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeArea, Card, TextInput, Button, useTheme } from '@adera/ui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,8 +17,6 @@ import { useAuth } from '@adera/auth';
 import * as Yup from 'yup';
 import { createParcelRecord } from '../../services/parcelService';
 import { usePartners } from '../../hooks/usePartners';
-
-const { width } = Dimensions.get('window');
 
 const PACKAGE_SIZES = [
   { id: 'document', label: 'Document', icon: 'file-document', basePrice: 50, weight: 0.5 },
@@ -48,8 +46,6 @@ const STEP_FIELDS = {
   4: ['paymentMethod', 'termsAccepted'],
 };
 
-const DEFAULT_COORDS = { latitude: 8.9806, longitude: 38.7578 };
-
 const isValidEthiopianPhone = (value) => {
   if (!value) return false;
   const sanitized = value.replace(/[\s-]/g, '');
@@ -69,6 +65,8 @@ const normalizeEthiopianPhone = (value) => {
   }
   return value;
 };
+
+const { width } = Dimensions.get('window');
 
 const haversineDistance = (start, end) => {
   if (!start || !end) return 0;
@@ -180,7 +178,7 @@ const CreateParcel = ({ navigation }) => {
   }, [packageSize, dropoffPartner, pickupPartner]);
 
   useEffect(() => {
-    calculatePrice();
+    setTimeout(() => calculatePrice(), 0);
   }, [calculatePrice]);
 
   const buildFormValues = useCallback(() => ({
@@ -284,9 +282,97 @@ const CreateParcel = ({ navigation }) => {
     }
   };
 
+  // Start (or retry) the Chapa payment for an already-created parcel.
+  // The parcel exists at this point — never create another one on retry.
+  const startPayment = useCallback(
+    async (createdParcel) => {
+      const txRef = createdParcel.tracking_id || `ADERA-${Date.now()}`;
+      const paymentResult = await initiatePayment({
+        method: 'chapa',
+        amount: Number(createdParcel.total_amount) || 0,
+        orderId: txRef,
+        customer: {
+          email: user?.email || 'customer@adera.app',
+          firstName: user?.user_metadata?.first_name || recipientName.split(' ')[0] || 'Customer',
+          lastName: user?.user_metadata?.last_name || recipientName.split(' ').slice(1).join('') || '',
+          phone: user?.phone || recipientPhone,
+        },
+        items: [{ parcelId: createdParcel.id, description: description || 'Parcel delivery' }],
+        meta: { parcel_id: createdParcel.id, purpose: 'parcel_payment' },
+      });
+
+      if (!paymentResult?.checkoutUrl) {
+        throw new Error('The payment gateway did not return a checkout link. Please try again.');
+      }
+
+      await openChapaCheckout(paymentResult.checkoutUrl);
+      // After returning from payment, navigate to callback for verification
+      navigation?.navigate?.('paymentCallback', {
+        tx_ref: paymentResult.txRef || txRef,
+        paymentMethod: 'chapa',
+        trackingId: createdParcel.tracking_id,
+      });
+    },
+    [description, initiatePayment, navigation, recipientName, recipientPhone, user]
+  );
+
+  // Parcel exists but the Chapa payment failed to start. Offer retry
+  // (re-enters checkout for the SAME parcel) without losing the tracking ID.
+  // The retry handler reads through a ref so repeated failures always re-invoke
+  // the latest closure (and keep re-alerting) instead of a stale one.
+  const alertPaymentFailureRef = useRef(() => {});
+  const alertPaymentFailure = useCallback(
+    (createdParcel, paymentError) => {
+      console.error('Payment error:', paymentError);
+      const offline =
+        typeof navigator !== 'undefined' && navigator.onLine === false;
+      Alert.alert(
+        'Parcel Created, Payment Pending',
+        offline
+          ? `You went offline during payment. Your parcel (${createdParcel.tracking_id}) is safe — reconnect and retry, or pay later.`
+          : `Your parcel (${createdParcel.tracking_id}) was created. Payment couldn't be started. You can retry now or pay later from the parcel details.`,
+        [
+          {
+            text: 'Retry Payment',
+            onPress: async () => {
+              setSubmitting(true);
+              try {
+                await startPayment(createdParcel);
+              } catch (retryError) {
+                alertPaymentFailureRef.current(createdParcel, retryError);
+              } finally {
+                setSubmitting(false);
+              }
+            },
+          },
+          {
+            text: 'Track Parcel',
+            onPress: () => navigation?.navigate?.('track', { trackingId: createdParcel.tracking_id }),
+          },
+          { text: 'Close', style: 'cancel' },
+        ]
+      );
+    },
+    [navigation, startPayment]
+  );
+  useEffect(() => {
+    alertPaymentFailureRef.current = alertPaymentFailure;
+  }, [alertPaymentFailure]);
+
   const handleSubmit = async () => {
+    if (submitting) return; // guard against double-tap creating duplicate parcels
+
     if (!user?.id) {
       Alert.alert('Sign in required', 'Please sign in before creating a parcel.');
+      return;
+    }
+
+    // Offline fallback: block before wasting a network round-trip
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      Alert.alert(
+        'You are offline',
+        'Parcel creation needs a connection. Your details are still here — reconnect and tap Create Parcel again.'
+      );
       return;
     }
 
@@ -354,47 +440,13 @@ const CreateParcel = ({ navigation }) => {
       });
 
       // Process payment if not COD or Wallet
-      const txRef = createdParcel.tracking_id || `ADERA-${Date.now()}`;
       const shouldProcessPayment = paymentMethod === 'chapa';
 
       if (shouldProcessPayment) {
         try {
-          const paymentResult = await initiatePayment({
-            method: paymentMethod,
-            amount: priceValue,
-            orderId: txRef,
-            customer: {
-              email: user?.email || 'customer@adera.app',
-              firstName: user?.user_metadata?.first_name || recipientName.split(' ')[0] || 'Customer',
-              lastName: user?.user_metadata?.last_name || recipientName.split(' ').slice(1).join('') || '',
-              phone: user?.phone || recipientPhone,
-            },
-            items: [{ parcelId: createdParcel.id, description: description || 'Parcel delivery' }],
-          });
-
-          // Open the payment gateway
-          if (paymentResult?.checkoutUrl) {
-            await openChapaCheckout(paymentResult.checkoutUrl);
-            // After returning from payment, navigate to callback for verification
-            navigation?.navigate?.('paymentCallback', {
-              tx_ref: paymentResult.txRef || txRef,
-              paymentMethod,
-            });
-          }
+          await startPayment(createdParcel);
         } catch (paymentError) {
-          console.error('Payment error:', paymentError);
-          // Parcel was created but payment failed — inform user
-          Alert.alert(
-            'Parcel Created, Payment Pending',
-            `Your parcel (ID: ${createdParcel.tracking_id}) was created. Payment processing encountered an issue. You can pay later from the parcel details.`,
-            [
-              {
-                text: 'Track Parcel',
-                onPress: () => navigation?.navigate?.('track', { trackingId: createdParcel.tracking_id }),
-              },
-              { text: 'Close', style: 'cancel' },
-            ]
-          );
+          alertPaymentFailure(createdParcel, paymentError);
         }
       } else {
         // Wallet or COD — no redirect needed
@@ -414,7 +466,16 @@ const CreateParcel = ({ navigation }) => {
       resetForm();
     } catch (error) {
       console.error('createParcel error', error);
-      Alert.alert('Parcel creation failed', error.message || 'Unable to create parcel right now.');
+      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      const looksLikeNetworkError =
+        /failed to fetch|networkerror|network request failed|load failed/i.test(error?.message || '');
+      // Form data is intentionally kept on failure so the user can retry as-is.
+      Alert.alert(
+        offline || looksLikeNetworkError ? 'Connection problem' : 'Parcel creation failed',
+        offline || looksLikeNetworkError
+          ? 'We could not reach Adera. Your details are still here — check your connection and tap Create Parcel again.'
+          : error.message || 'Unable to create parcel right now. Your details are still here — please try again.'
+      );
     } finally {
       setSubmitting(false);
     }

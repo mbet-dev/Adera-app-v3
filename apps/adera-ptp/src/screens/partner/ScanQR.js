@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Dimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import { AppBar, Card, Button, SafeArea, useTheme, TextInput } from '@adera/ui';
@@ -6,10 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { BarCodeScanner, isBarcodeAvailable } from '../../utils/barcodeScannerSafe';
 import { useCameraPermission } from '../../hooks/useCameraPermission';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const ScanQR = ({ navigation }) => {
-  const theme = useTheme();
+  useTheme();
   const [scanning, setScanning] = useState(false);
   const [trackingCode, setTrackingCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -65,7 +65,7 @@ const ScanQR = ({ navigation }) => {
     }, 1000);
   };
 
-  const handleBarCodeScanned = ({ type, data }) => {
+  const handleBarCodeScanned = ({ data }) => {
     setScanning(false);
     processTrackingCode(data);
   };

@@ -1,7 +1,7 @@
 # Development Status
 
-**Last Updated**: 2026-09-16  
-**Current Phase**: Phase 6 — Push Notifications Complete  
+**Last Updated**: 2026-10-12  
+**Current Phase**: Phase 8 — Maps, Role Screens, EAS, CI Complete  
 **Branch**: dev  
 
 ## Phase 1 Benchmark (IN PROGRESS)
@@ -55,6 +55,7 @@
 - [x] NotificationBell with real-time Supabase subscriptions
 
 ### ✅ Phase 7 Complete (2026-09-27)
+- [x] 87 Jest unit tests (formatters, validators, auth validation, cart store) — all passing
 - [x] Loading skeletons (@adera/ui) — dashboard, parcel list, product grid/detail, orders, tracking
 - [x] Biometric login — keystore-backed credentials, consent prompt on first login, clear-on-disable
 - [x] ESLint 9 (flat config) + Prettier — lint passes with 0 errors
@@ -63,7 +64,12 @@
 - [x] Security audit doc (docs/security-audit.md)
 - [x] Development plan v2 — Telebirr/ArifPay dropped, Chapa-only
 
-### ✅ Phase 8 Complete (2026-09-28)
+### ✅ Phase 8 Complete (2026-10-12)
+- [x] Node 24 / npm 11 in root package.json — turbo type-check now resolves all 9 workspaces (was failing with "Missing devEngines.packageManager")
+- [x] ESLint 9 flat config verified: 0 errors, 279 warnings (all inside apps/adera-ptp; @adera/shop, @adera/utils, @adera/* packages clean)
+- [x] Full CI gate verified today: `npm run lint && npm test && npm run type-check` — lint (0 errors) → jest (4 suites / 87 tests pass) → turbo type-check (9 packages clean)
+- [x] Auth store init stall fixed (packages/auth/src/authStore.js) — `initialize()` was setting `isInitialized: true` before resolving `authState`, so a fresh session-less web load stayed on `LoadingScreen` forever; now `getSession()` result sets `AUTHENTICATED` / `UNAUTHENTICATED` immediately
+- [x] Shop web LoadingScreen crash fixed (packages/ui/src/LoadingScreen.js) — `useTheme()` drove a `react-native-paper`/`react-native-web` `padding: "12px 20px"` style error that threw inside `<LoadingScreen>`; replaced theme-derived colors with static values so the onboarding screen renders on web
 - [x] Chapa verify Edge Function (supabase/functions/chapa-verify) — server-side secret,
       idempotent payment verification; client callback screens now verify via the function
 - [x] Map rendering fixed end-to-end (web + native):
